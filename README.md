@@ -1,1 +1,1 @@
-"# avros-node" 
+npm install avros

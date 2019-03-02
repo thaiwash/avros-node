@@ -20,5 +20,10 @@
   "bugs": {
     "url": "https://github.com/thaiwash/avros-node/issues"
   },
-  "homepage": "https://github.com/thaiwash/avros-node#readme"
+  "homepage": "https://github.com/thaiwash/avros-node#readme",
+  "dependencies": {
+    "async-waterfall": "^0.1.5",
+    "socket.io": "^2.2.0",
+    "socket.io-client": "^2.2.0"
+  }
 }
