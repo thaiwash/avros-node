@@ -1,7 +1,18 @@
 class Sockets extends OSModule {
 	init() {
 		console.log("initing sockets")
-		var playerName = "webClient"
+		this.playerName = "webClient"
+		var query = window.location.search.substring(1);
+		var qs = parse_query_string(query);
+		
+		if (!isVoid(qs)) {
+			if(!isVoid(qs.playerName)) {
+				this.playerName = qs.playerName
+				console.log("player name is "+ this.playerName)
+				
+			}
+		}
+		
 		var self = this
 		
 		this.objectMap = []
@@ -25,7 +36,7 @@ class Sockets extends OSModule {
 		this.socket.on("who are you", function(){
 			
 			self.socket.emit("i am", {
-				"playerName": playerName
+				"playerName": self.playerName
 			})
 			
 		})
@@ -37,9 +48,15 @@ class Sockets extends OSModule {
 		
 		this.socket.on("syncronization event callback", function(){
 			console.log("client: sync")
-			self.mapExisting()
+			if (!isVoid(this.syncTimeout)) {
+				clearTimeout(this.syncTimeout)
+			}
+			this.syncTimeout = setTimeout(function() {
+				console.log("connection timeout")
+				
+			}, 5000)
 			self.socket.emit("syncronization event", {
-				"user_id": playerName,
+				"user_id": self.playerName,
 				"data": "("
 					+ OS.camera.position.x + ", "
 					+ OS.camera.position.y + ", "
@@ -71,58 +88,79 @@ class Sockets extends OSModule {
 					+ controller.sphere[0].id + "|"
 					+ controller.sphere[1].id
 			})
+			
+			self.mapExisting()
 		})
 	}
 	
 	objectUpdate(props) {
-		var obj = OS.scene.getObjectById( props.object_id, true );
 		
-		if (!isVoid(obj)) {
-			if (obj.type == "cube") {
-				var geometry = new THREE.BoxGeometry( 
-					parseFloat(props.scaleX), 
-					parseFloat(props.scaleY), 
-					parseFloat(props.scaleZ)
-				)
-				var material = new THREE.MeshBasicMaterial( {color: 0xffffff} )
-				obj = new THREE.Mesh( geometry, material )
-				obj.add( cube )
-			} 
-			
-			if (type == "sphere") {
-				var geometry = new THREE.SphereGeometry( 
-					parseFloat(obj.scaleX), 
-					parseFloat(obj.scaleY), 
-					parseFloat(obj.scaleZ)
-				)
-				var material = new THREE.MeshBasicMaterial( {color: 0xffffff} )
-				obj = new THREE.Mesh( geometry, material )
-				obj.add( sphere )
+		var obj = OS.scene.getObjectByName( props.name, true );
+		
+		if (isVoid(obj)) {
+			if (!isVoid(props.type)) {
+				if (props.type == "cube") {
+					var geometry = new THREE.BoxGeometry( 
+						parseFloat(props.scaleX), 
+						parseFloat(props.scaleY), 
+						parseFloat(props.scaleZ)
+					)
+					var material = new THREE.MeshBasicMaterial( {color: 0xffffff, transparent: true, opacity: 1} )
+					obj = new THREE.Mesh( geometry, material )
+					OS.scene.add( obj )
+				} else if (props.type == "sphere") {
+					console.log("created")
+					var geometry = new THREE.SphereGeometry( 40/1000, 32/1000, 16/1000 );
+					var material = new THREE.MeshBasicMaterial( {color: 0xffffff, transparent: true, opacity: 1})
+					obj = new THREE.Mesh( geometry, material )
+					OS.scene.add( obj )
+					
+					controller.grabbableObjects.push(obj)
+				} else if (props.type == "o") {
+					obj = o.add(obj)
+				} else {
+					return
+				}
+			} else {
+				return
 			}
 		}
 		
-		if (isVoid(obj)) {
-			return
+		
+		if (!isVoid(props.posX)) {
+			obj.position.fromArray([
+				parseFloat(props.posX), 
+				parseFloat(props.posY), 
+				parseFloat(props.posZ)
+			])
 		}
 		
-		obj.position = new THREE.Vector3(
-			parseFloat(props.posX), 
-			parseFloat(props.posY), 
-			parseFloat(props.posZ)
-		)
+		if (!isVoid(props.scaX)) {
+			obj.scale.fromArray([
+				parseFloat(props.scaX), 
+				parseFloat(props.scaY), 
+				parseFloat(props.scaZ)
+			])
+		}
 		
-		obj.scale = new THREE.Vector3(
-			parseFloat(props.scaleX), 
-			parseFloat(props.scaleY), 
-			parseFloat(props.scaleZ)
-		)
+		if (!isVoid(props.rotX)) {
+			obj.quaternion.fromArray([
+				parseFloat(props.rotX), 
+				parseFloat(props.rotY), 
+				parseFloat(props.rotZ), 
+				parseFloat(props.rotW)
+			])
+		}
 		
-		obj.quaternion = new THREE.Quaternion(
-			parseFloat(props.rotX), 
-			parseFloat(props.rotY), 
-			parseFloat(props.rotZ), 
-			parseFloat(props.rotW)
-		)
+		if (!isVoid(props.colorR)) {
+			obj.material.color.r = parseInt(props.colorR);
+			obj.material.color.g = parseInt(props.colorG);
+			obj.material.color.b = parseInt(props.colorB);
+		}
+		
+		if (!isVoid(props.transparency)) {
+			obj.material.opacity = parseFloat(props.transparency);
+		}
 		
 		obj.name = props.name
 	}
@@ -142,7 +180,9 @@ class Sockets extends OSModule {
 	
 	toSocketJSON(obj) {
 		var type = ""
-        if (obj.geometry.type == "Geometry") {
+        if (obj.name.search("oOo") != -1) {
+			type = "o"
+        } else if (obj.geometry.type == "Geometry") {
             if (obj.geometry.boundingSphere !== null) {
                 type = "sphere"
             }
@@ -156,15 +196,26 @@ class Sockets extends OSModule {
 			"posX": obj.position.x,
 			"posY": obj.position.y,
 			"posZ": obj.position.z,
+			"scaX": obj.scale.x,
+			"scaY": obj.scale.y,
+			"scaZ": obj.scale.z,
 			"rotX": obj.quaternion._x,
 			"rotY": obj.quaternion._y,
 			"rotZ": obj.quaternion._z,
 			"rotW": obj.quaternion._w,
 			"object_id": obj.id,
-			"parent": obj.parent.id
+			"parent": obj.parent.id,
+			"colorR": obj.material.color.r,
+			"colorG": obj.material.color.g,
+			"colorB": obj.material.color.b,
+			"transparency": obj.material.opacity
 		}
 	}
 	
+	newName(name) {
+		this.playerName = name
+		this.socket.emit("name changed", {"playerName": name})
+	}
 	
 	mapExisting() {
 		objList = []
@@ -203,3 +254,26 @@ function allSceneObjects(scene) {
 		objList.push(scene.children[i])
 	}
 }
+
+function parse_query_string(query) {
+  var vars = query.split("&");
+  var query_string = {};
+  for (var i = 0; i < vars.length; i++) {
+    var pair = vars[i].split("=");
+    var key = decodeURIComponent(pair[0]);
+    var value = decodeURIComponent(pair[1]);
+    // If first entry with this name
+    if (typeof query_string[key] === "undefined") {
+      query_string[key] = decodeURIComponent(value);
+      // If second entry with this name
+    } else if (typeof query_string[key] === "string") {
+      var arr = [query_string[key], decodeURIComponent(value)];
+      query_string[key] = arr;
+      // If third or later entry with this name
+    } else {
+      query_string[key].push(decodeURIComponent(value));
+    }
+  }
+  return query_string;
+}
+

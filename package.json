@@ -23,6 +23,7 @@
   "homepage": "https://github.com/thaiwash/avros-node#readme",
   "dependencies": {
     "async-waterfall": "^0.1.5",
+    "express": "^4.16.4",
     "socket.io": "^2.2.0",
     "socket.io-client": "^2.2.0"
   }

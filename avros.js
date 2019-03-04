@@ -2,6 +2,7 @@ var fs = require("fs")
 var THREE = require("./threejs/three.js")
 eval(fs.readFileSync("threejs/additionalRenderers.js").toString())
 eval(fs.readFileSync("threejs/SceneUtils.js").toString())
+const express = require('express')
 
 
 /*
@@ -43,6 +44,18 @@ class AVROS {
 	
 	open(port) {
         var self = this
+		
+		
+		this.app = express()
+
+		this.app.use(express.static('public'))
+		
+		this.app.get('/players', function(req, res) {
+			res.send(JSON.stringify(self.players, 0, 4));
+			res.end();
+		})
+		var server = require('http').createServer(this.app);
+		/*
 		this.app = require('http').createServer(function (req, res) {
 			if (fs.existsSync("./public"+req.url)) {
 				if (!fs.lstatSync("./public"+req.url).isDirectory()) {
@@ -64,19 +77,15 @@ class AVROS {
 				res.write(JSON.stringify(self.entanglements, 0, 4));
 				res.end();
 			}
-		})
+		})*/
 		
-		this.io = require('socket.io')(this.app);
+		this.io = require('socket.io')(server);
 
-		this.app.listen(port);
+		server.listen(port);
 		
 		this.io.on('connection', function(socket) {
 			console.log("server: connection detected")
 			self.initSocket(socket)
-			socket.on('disconnect', function(socket) {
-				console.log(socket.playerName+" left the server")
-				delete(self.players[socket.playerName])
-			})
 		})
 		
 		
@@ -90,6 +99,9 @@ class AVROS {
 		var keys = Object.keys(sockets["sockets"])
 		for (var i = 0; i < keys.length; i ++) {
 			if (sockets.sockets[keys[i]].playerName == playerName) {
+				if (isVoid(sockets.sockets[keys[i]])) {
+					console.log("warnng: player "+playerName+" doesnt have a socket")
+				}
 				return sockets.sockets[keys[i]]
 			}
 		}
@@ -107,7 +119,7 @@ class AVROS {
 		
 		this.entanglementSyncInterval = setInterval(function() {
 			self.entanglementSync()
-		}, 100)
+		}, 3000)
 	}
 	
 	socketCleanup() {
@@ -266,6 +278,10 @@ class AVROS {
 						}
 						if (!found) {
 							console.log("player "+playerNames[i3]+ " is missing object "+obj.name)
+							if (isVoid(this.getPlayerSocket(playerNames[i3]))) {
+								console.log("warning: player "+playerNames[i3]+ " is missing a socket")
+								return
+							}
 							this.getPlayerSocket(playerNames[i3]).emit("object changed", obj)
 						}
 					}
@@ -282,12 +298,13 @@ class AVROS {
 	}
 	
 	registerObject(socket, data) {
+		console.log("registering object")
 		if (isVoid(socket.playerName)) {
 			return
 		}
 		
 		if(isVoid(this.players[socket.playerName])){
-			console.log("server: syncing before inited")
+			console.log("server: warning; syncing before inited")
 			return
 		}
 		console.log("server "+socket.playerName+" registered object " + data.name + " " + data.object_id)
@@ -313,14 +330,14 @@ class AVROS {
 
         socket.inited = false
 		socket.on("syncronization event", function(data) {
-			console.log("server: sync ")
-			console.log(JSON.stringify(data, 0, 4))
+			//console.log("server: sync ")
+			//console.log(JSON.stringify(data, 0, 4))
 			if (isVoid(data)) {
 				console.warn("server: bad client dsconnected")
 				socket.disconnect()
 				return
 			}
-			self.syncEvent(socket, socket.playerName, data)
+			self.syncEvent(socket, data)
 			
 			clearTimeout(self.players[socket.playerName].syncTimer)
 			setTimeout(function() {
@@ -342,18 +359,31 @@ class AVROS {
 			socket.emit("connection accepted")
 			socket.emit("syncronization event callback")
 		})
+		
+        socket.on("name changed", function(data) {
+			socket.playerName = data["playerName"]
+        })
+		
+		
+		socket.on('disconnect', function(obj) {
+			console.log(socket.playerName+" left the server")
+			delete(self.players[socket.playerName])
+		})
 	}
 
-	syncEvent(socket, name, data) {
+	syncEvent(socket, data) {
+		var name = socket.playerName
         var self = this
 		
 		var player = this.parseSyncData(data["data"])
+		
+		var controllerDistraction = 0
 		
 		if (isVoid(this.players[name])) {
 			
 			socket.syncTimeout = setTimeout(function() {
 				socket.emit("syncronization event callback")
-				self.syncEvent(socket, name, data)
+				self.syncEvent(socket, data)
 			}, 0)
 
             socket.playerName = name
@@ -376,26 +406,26 @@ class AVROS {
 			"scaleX": "0.04500",
 			"scaleY": "0.04500",
 			"scaleZ": "0.04500",
-			"posX": (player.leftController.position.x + 0.10).toString(),
+			"posX": (player.leftController.position.x + controllerDistraction).toString(),
 			"posY": player.leftController.position.y.toString(),
 			"posZ": player.leftController.position.z.toString(),
 			"name": name+"LeftControllerNoGra"
 		}
 		socket.emit("object changed", evt)
 		socket.broadcast.emit("object changed", evt)
-		
+				
 		var evt2 = {
 			"object_id": player.rightController.object_id.toString(),
 			"type": "sphere",
 			"scaleX": "0.04500",
 			"scaleY": "0.04500",
 			"scaleZ": "0.04500",
-			"posX": (player.rightController.position.x + 0.10).toString(),
+			"posX": (player.rightController.position.x + controllerDistraction).toString(),
 			"posY": player.rightController.position.y.toString(),
 			"posZ": player.rightController.position.z.toString(),
 			"name": name+"RightControllerNoGra"
 		}
-		//console.log(player.rightController.object_id)
+		//console.log(evt2.name)
 		socket.emit("object changed", evt2)
 		socket.broadcast.emit("object changed", evt2)
 		
