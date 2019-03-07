@@ -8,8 +8,7 @@ const express = require('express')
 /*
 c# warn: controller sphere registeres with wrong id
 c# warn: opening multiple sockets
-c# bug: user_id is object_id
-c# bug: not syncing on autoconnect
+c# todo: undepricate user_id so playser acn leave gracefully
 */
 
 class AVROS {
@@ -18,6 +17,7 @@ class AVROS {
 		this.artificialLag = 1000
 		this.players = {}
 		this.entanglements = []
+		this.requiredTasks = []
 		this.personal = [
 			"Main Menu",
 			"Keyboard",
@@ -153,10 +153,31 @@ class AVROS {
 		var playerNames = Object.keys(this.players)
 		for (var i = 0; i < playerNames.length; i ++) {
 			if (connectedPlayers.indexOf(playerNames[i]) == -1) {
+				//this.removePlayerOwnedObjects(playerNames[i])
 				delete(this.players[playerNames[i]])
 			}
 		}
 		console.log("server: no sockets "+ keys.length + " "+Object.keys(this.players))
+	}
+	/*
+	removePlayerOwnedObjects(playerName) {
+		var playerNames = Object.keys(this.players)
+		for (var i = 0; i < playerNames.length; i ++) {
+			for (var i2 = 0; i2 < this.players[playerNames[i]].objects.length; i2 ++) {
+				if (!isVoid(this.players[playerNames[i]][i2].owner)) {
+				if (!isVoid(this.players[playerNames[i]][i2].owner)) {
+					if (this.players[playerNames[i]][i2].owner == playerName) {
+						this.deleteObject(this.players[playerNames[i]][i2])
+						
+					}
+				}
+				}
+			}
+		}
+	}*/
+	
+	deleteObject(socket, obj) {
+		socket.emit("object destroyed", obj)
 	}
 	
 	isSimilar(obj1, obj2) {
@@ -170,6 +191,9 @@ class AVROS {
 		var keys = Object.keys(obj1)
 		for (var i = 0; i < keys.length; i ++) {
 			if (keys[i] == "object_id") {
+				continue
+			}
+			if (keys[i] == "syncTime") {
 				continue
 			}
 			if (isVoid(obj2[keys[i]])) {
@@ -258,36 +282,102 @@ class AVROS {
 			}
 		}
 		
-		this.checkForMissingObjects()
+		this.rationalizeObjects()
 	}
 	
-	checkForMissingObjects() {
+	// check for missing objects
+	// check that all objects are similiar on all sovkets
+	// check for no missing player owned objects
+	
+	
+	rationalizeObjects() {
+		
 		var objs = this.allObjects()
 		var playerNames = Object.keys(this.players)
 		for (var i = 0; i < playerNames.length; i ++) {
 			for (var i2 = 0; i2 < this.players[playerNames[i]].objects.length; i2 ++) {
 				var obj = this.players[playerNames[i]].objects[i2]
+				
+				// check if object belongs to a disconnected player
+				if (!isVoid(this.players[playerNames[i]].objects[i2].owner)) {
+					if (isVoid(this.getPlayerSocket(obj.owner))) {
+						console.log("server: player "+playerNames[i]+ " is disconnected. "+obj.name+ " will be deleted")
+						//this.getPlayerSocket(playerNames[i]).emit("object destroyed", obj)
+						
+						this.requiredTasks.push({
+							"target": playerNames[i],
+							"action": "object destroyed",
+							"object": obj
+						})
+							
+						this.players[playerNames[i]].objects.splice(i2, 1)
+						i2 = 0
+					}
+				}
+				
+				
 				if (!isVoid(obj.type)) {
 					for (var i3 = 0; i3 < playerNames.length; i3 ++) {
+						
+							
+						// check for object existance
 						var found = false
+						
 						for (var i4 = 0; i4 < this.players[playerNames[i3]].objects.length; i4 ++) {
 							var obj2 = this.players[playerNames[i3]].objects[i4]
 							if (obj.name == obj2.name) {
 								var found = true
+							}
+							
+							// check for OOS
+							if (obj.object_id == obj2.object_id) {
+								if (!this.isSimilar(obj, obj2)) {
+									
+									if (obj.syncTime > obj2.syncTime) {
+										console.log("player "+playerNames[i3]+ " object "+obj2.name+ " is out of sync")
+									    //this.getPlayerSocket(playerNames[i3]).emit("object changed", obj)
+										this.requiredTasks.push({
+											"target": playerNames[i3],
+											"action": "object changed",
+											"object": obj2
+										})
+									} else {
+										console.log("player "+playerNames[i]+ " object "+obj.name+ " is out of sync")
+										//this.getPlayerSocket(playerNames[i]).emit("object changed", obj2)
+										this.requiredTasks.push({
+											"target": playerNames[i],
+											"action": "object changed",
+											"object": obj2
+										})
+									}
+								}
 							}
 						}
 						if (!found) {
 							console.log("player "+playerNames[i3]+ " is missing object "+obj.name)
 							if (isVoid(this.getPlayerSocket(playerNames[i3]))) {
 								console.log("warning: player "+playerNames[i3]+ " is missing a socket")
-								return
 							}
-							this.getPlayerSocket(playerNames[i3]).emit("object changed", obj)
+							console.log(obj)
+							//this.getPlayerSocket(playerNames[i3]).emit("object changed", obj)
+							this.requiredTasks.push({
+								"target": playerNames[i3],
+								"action": "object changed",
+								"object": obj
+							})
 						}
+						
 					}
 				}
 			}
 		}
+		
+		this.requiredTasks.sort(function(a, b) {
+			return a.object.syncTime - b.object.syncTime;
+		})
+		
+		
+		console.log("nothing to sane")
 	}
 	
 	syncObjectWith(obj, master) {
@@ -298,21 +388,10 @@ class AVROS {
 	}
 	
 	registerObject(socket, data) {
-		console.log("registering object")
-		if (isVoid(socket.playerName)) {
-			return
+		if (data.name.search("Controller") == -1 && data.name.search("Camera") == -1) {
+			console.log("server "+socket.playerName+" registered object " + data.name + " " + data.object_id)
 		}
-		
-		if(isVoid(this.players[socket.playerName])){
-			console.log("server: warning; syncing before inited")
-			return
-		}
-		console.log("server "+socket.playerName+" registered object " + data.name + " " + data.object_id)
-		
-		if (data.type != "") {
-			socket.broadcast.emit("object changed", data)
-		}
-		
+		data.syncTime = (new Date()).getTime()
 		
 		var objs = this.players[socket.playerName].objects
 		for (var i = 0; i < objs.length; i ++) {
@@ -322,6 +401,25 @@ class AVROS {
 			}
 		}
 		this.players[socket.playerName].objects.push(data)
+	}
+	
+	changeObject(socket, data) {
+		if (isVoid(socket.playerName)) {
+			return
+		}
+		
+		if(isVoid(this.players[socket.playerName])){
+			console.log("server: warning; syncing before inited")
+			return
+		}
+		//console.log("server "+socket.playerName+" registered object " + data.name + " " + data.object_id)
+		
+		if (data.type != "") {
+			// let server handle syncing
+			//socket.broadcast.emit("object changed", data)
+		}
+		
+		this.registerObject(socket, data)
 	}
 	
 	initSocket(socket) {
@@ -346,7 +444,11 @@ class AVROS {
         })
 		
         socket.on("object changed", function(data) {
-            self.registerObject(socket, data)
+            self.changeObject(socket, data)
+        })
+		
+        socket.on("object registered", function(data) {
+            self.changeObject(socket, data)
         })
 
 		console.log("server: who are you")
@@ -390,6 +492,7 @@ class AVROS {
 
             player.leftController.object_id = this.generateId()
             player.rightController.object_id = this.generateId()
+            player.head.object_id = this.generateId()
             player.objects = []
 			
 			console.log("server: "+name+" connected")
@@ -398,6 +501,7 @@ class AVROS {
             player.objects = this.players[name].objects
 			player.leftController.object_id = this.players[name].leftController.object_id
 			player.rightController.object_id = this.players[name].rightController.object_id
+			player.head.object_id = this.players[name].head.object_id
 		}
 		
 		var evt = {
@@ -409,10 +513,11 @@ class AVROS {
 			"posX": (player.leftController.position.x + controllerDistraction).toString(),
 			"posY": player.leftController.position.y.toString(),
 			"posZ": player.leftController.position.z.toString(),
-			"name": name+"LeftControllerNoGra"
+			"name": name+"LeftController",
+			"owner": name
 		}
-		socket.emit("object changed", evt)
-		socket.broadcast.emit("object changed", evt)
+		//socket.emit("object changed", evt)
+		//socket.broadcast.emit("object changed", evt)
 				
 		var evt2 = {
 			"object_id": player.rightController.object_id.toString(),
@@ -423,11 +528,32 @@ class AVROS {
 			"posX": (player.rightController.position.x + controllerDistraction).toString(),
 			"posY": player.rightController.position.y.toString(),
 			"posZ": player.rightController.position.z.toString(),
-			"name": name+"RightControllerNoGra"
+			"name": name+"RightController",
+			"owner": name
 		}
 		//console.log(evt2.name)
-		socket.emit("object changed", evt2)
-		socket.broadcast.emit("object changed", evt2)
+		//socket.emit("object changed", evt2)
+		//socket.broadcast.emit("object changed", evt2)
+		
+		var evt3 = {
+			"object_id": player.head.object_id.toString(),
+			"type": "sphere",
+			"scaleX": "0.04500",
+			"scaleY": "0.04500",
+			"scaleZ": "0.04500",
+			"posX": player.head.position.x.toString(),
+			"posY": player.head.position.y.toString(),
+			"posZ": player.head.position.z.toString(),
+			"rotX": player.head.rotation._x.toString(),
+			"rotY": player.head.rotation._y.toString(),
+			"rotZ": player.head.rotation._z.toString(),
+			"rotW": player.head.rotation._w.toString(),
+			"name": "PlayerCamera",
+			"owner": name
+		}
+		//console.log(evt3.name)
+		//socket.emit("object changed", evt2)
+		//socket.broadcast.emit("object changed", evt3)
 		
 		
 		this.players[name] = player

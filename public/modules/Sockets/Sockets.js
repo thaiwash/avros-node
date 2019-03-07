@@ -2,8 +2,10 @@ class Sockets extends OSModule {
 	init() {
 		console.log("initing sockets")
 		this.playerName = "webClient"
+		this.spectate("Taivas")
 		var query = window.location.search.substring(1);
 		var qs = parse_query_string(query);
+		
 		
 		if (!isVoid(qs)) {
 			if(!isVoid(qs.playerName)) {
@@ -16,6 +18,8 @@ class Sockets extends OSModule {
 		var self = this
 		
 		this.objectMap = []
+		// if child was registered before parent, obj may become orphsn
+		this.orphanObjects = []
 		
 		this.socket = io()
 		this.socket.connect('http://localhost:9774');
@@ -44,6 +48,10 @@ class Sockets extends OSModule {
 		
 		this.socket.on("object changed", function(data) {
 			self.objectUpdate(data)
+		})
+		
+		this.socket.on("object destroyed", function(data) {
+			self.destroyObject(data)
 		})
 		
 		this.socket.on("syncronization event callback", function(){
@@ -93,10 +101,53 @@ class Sockets extends OSModule {
 		})
 	}
 	
+	destroyObject(obj) {
+		var obj = this.getObjectBySyncId( obj.syncProps.object_id );
+		console.log(props.name + " destroyed")
+		obj.parent.remove(obj)
+	}
+	
+	spectate(playerName) {
+		this.spectating = playerName
+	}
+	
+	observerCheck(obj) {
+		if (isVoid(obj.syncProps.name)) {
+			return
+		}
+		if (isVoid(obj.syncProps.owner)) {
+			return
+		}
+		if (obj.syncProps.name == "PlayerCamera" && obj.syncProps.owner == this.spectating) {
+			OS.camera.position.copy(obj.position)
+			//OS.camera.rotation.copy(this.applyUnityRotation(obj.syncProps))
+			console.log("spectating Taivas")
+		}
+	}
+	
+	applyUnityRotation(props){
+		var q = new THREE.Quaternion( 
+			-(parseFloat(props.rotX)), 
+			(parseFloat(props.rotY)), 
+			(parseFloat(props.rotZ)), 
+			-(parseFloat(props.rotW)) 
+		);
+
+		var v = new THREE.Euler();  
+		v.setFromQuaternion( q );
+
+		//v.y += Math.PI; // Y is 180 degrees off
+
+		v.z *= -1; // flip Z
+
+		return v;
+	}
+	
 	objectUpdate(props) {
 		
-		var obj = OS.scene.getObjectByName( props.name, true );
+		var obj = this.getObjectBySyncId( props.object_id );
 		
+		var wasCreated = false
 		if (isVoid(obj)) {
 			if (!isVoid(props.type)) {
 				if (props.type == "cube") {
@@ -108,49 +159,63 @@ class Sockets extends OSModule {
 					var material = new THREE.MeshBasicMaterial( {color: 0xffffff, transparent: true, opacity: 1} )
 					obj = new THREE.Mesh( geometry, material )
 					OS.scene.add( obj )
+					obj.isCube = true
+					wasCreated = true
 				} else if (props.type == "sphere") {
 					console.log("created")
 					var geometry = new THREE.SphereGeometry( 40/1000, 32/1000, 16/1000 );
 					var material = new THREE.MeshBasicMaterial( {color: 0xffffff, transparent: true, opacity: 1})
 					obj = new THREE.Mesh( geometry, material )
 					OS.scene.add( obj )
+					obj.isSphere = true
+					wasCreated = true
 					
 					controller.grabbableObjects.push(obj)
-				} else if (props.type == "o") {
-					obj = o.add(obj)
-				} else {
-					return
+				} else if (props.type == "plane") {
+					var geometry = new THREE.PlaneGeometry( 
+						parseFloat(props.scaleX), 
+						parseFloat(props.scaleY), 
+						parseFloat(props.scaleZ)
+					);
+					var material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
+					obj = new THREE.Mesh( geometry, material );
+					OS.scene.add( obj );
+					obj.isPlane = true
+					wasCreated = true
+				} else if (props.type == "empty") {
+					var geometry = new THREE.SphereGeometry( 40/1000, 32/1000, 16/1000 );
+					var material = new THREE.MeshBasicMaterial( {color: 0xffffff, transparent: true, opacity: 1})
+					obj = new THREE.Mesh( geometry, material )
+					OS.scene.add( obj )
+					obj.isEmpty = true
+					obj.visible = false
+					wasCreated = true
+					
+					controller.grabbableObjects.push(obj)
 				}
 			} else {
-				return
+				
 			}
 		}
 		
+		obj.syncProps = props
 		
-		if (!isVoid(props.posX)) {
-			obj.position.fromArray([
-				parseFloat(props.posX), 
-				parseFloat(props.posY), 
-				parseFloat(props.posZ)
-			])
+		if (!isVoid(props.parent)) {
+			var parent = this.getObjectBySyncId( props.parent );
+			if (isVoid(parent)) {
+				console.log("object "+props.name+" "+props.object_id+" has no parent in scene")
+				obj.visible = false
+				this.orphanObjects.push(obj)
+			} else {
+				THREE.SceneUtils.attach(obj, OS.scene, parent)
+			}
+		} else if (obj.parent.id != OS.scene.id) {
+			THREE.SceneUtils.detach(obj, obj.parent, OS.scene)
 		}
 		
-		if (!isVoid(props.scaX)) {
-			obj.scale.fromArray([
-				parseFloat(props.scaX), 
-				parseFloat(props.scaY), 
-				parseFloat(props.scaZ)
-			])
-		}
+		this.scanForAdoption(obj)
 		
-		if (!isVoid(props.rotX)) {
-			obj.quaternion.fromArray([
-				parseFloat(props.rotX), 
-				parseFloat(props.rotY), 
-				parseFloat(props.rotZ), 
-				parseFloat(props.rotW)
-			])
-		}
+		this.updateMainProperties(obj)
 		
 		if (!isVoid(props.colorR)) {
 			obj.material.color.r = parseInt(props.colorR);
@@ -163,6 +228,63 @@ class Sockets extends OSModule {
 		}
 		
 		obj.name = props.name
+		obj.name = props.name
+		obj.syncID = props.object_id
+		
+		
+		
+		
+		this.updateSyncProps(obj)
+		this.socket.emit("object registered", obj.syncProps)
+		
+		this.observerCheck(obj)
+		
+		
+	}
+	
+	scanForAdoption(obj) {
+		if (isVoid(obj.syncProps.parent)) {
+			return
+		}
+		for (var i = 0; i < this.orphanObjects.length; i ++) {
+			if (obj.syncProps.object_id == this.orphanObjects[i].syncProps.parent) {
+				console.log(this.orphanObjects[i].syncProps.name + " orphan object was adopted by "+obj.syncProps.name)
+				THREE.SceneUtils.attach(this.orphanObjects[i], OS.scene, obj)
+				
+				this.updateMainProperties(this.orphanObjects[i])
+				this.orphanObjects[i].visible = true
+				this.orphanObjects.splice(i, 1)
+				i = 0
+			}
+		}
+	}
+	
+	updateMainProperties(obj) {
+		
+		if (!isVoid(obj.syncProps.posX)) {
+			obj.position.fromArray([
+				parseFloat(obj.syncProps.posX), 
+				parseFloat(obj.syncProps.posY), 
+				parseFloat(obj.syncProps.posZ)
+			])
+		}
+		
+		if (!isVoid(obj.syncProps.scaX)) {
+			obj.scale.fromArray([
+				parseFloat(obj.syncProps.scaX), 
+				parseFloat(obj.syncProps.scaY), 
+				parseFloat(obj.syncProps.scaZ)
+			])
+		}
+		
+		if (!isVoid(obj.syncProps.rotX)) {
+			obj.quaternion.fromArray([
+				parseFloat(obj.syncProps.rotX), 
+				parseFloat(obj.syncProps.rotY), 
+				parseFloat(obj.syncProps.rotZ), 
+				parseFloat(obj.syncProps.rotW)
+			])
+		}
 	}
 	
 	isSimilar(obj1, obj2) {
@@ -178,43 +300,74 @@ class Sockets extends OSModule {
 		return true
 	}
 	
-	toSocketJSON(obj) {
+	updateSyncProps(obj) {
+		if (isVoid(obj.syncProps)) {
+			return
+		}
+		/*
 		var type = ""
-        if (obj.name.search("oOo") != -1) {
-			type = "o"
-        } else if (obj.geometry.type == "Geometry") {
-            if (obj.geometry.boundingSphere !== null) {
-                type = "sphere"
-            }
-        } else if (obj.geometry.type == "BoxGeometry") {
-           type = "cube"
+		
+		if (!isVoid(obj.isSphere)) {
+			type = "sphere"
+		} else if (!isVoid(obj.isCube)) {
+			type = "cube"
+		} else if (!isVoid(obj.isPlane)) {
+			type = "plane"
+		} else if (!isVoid(obj.isEmpty)) {
+			type = "empty"
 		}
 		
-		return {
-			"type": type,
-			"name": obj.name,
-			"posX": obj.position.x,
-			"posY": obj.position.y,
-			"posZ": obj.position.z,
-			"scaX": obj.scale.x,
-			"scaY": obj.scale.y,
-			"scaZ": obj.scale.z,
-			"rotX": obj.quaternion._x,
-			"rotY": obj.quaternion._y,
-			"rotZ": obj.quaternion._z,
-			"rotW": obj.quaternion._w,
-			"object_id": obj.id,
-			"parent": obj.parent.id,
-			"colorR": obj.material.color.r,
-			"colorG": obj.material.color.g,
-			"colorB": obj.material.color.b,
-			"transparency": obj.material.opacity
-		}
+		if (type == "") {
+			if (obj.name.search("oOo") != -1) {
+				type = "o"
+			} else if (obj.geometry.type == "Geometry") {
+				if (obj.geometry.boundingSphere !== null) {
+					type = "sphere"
+				}
+			} else if (obj.geometry.type == "BoxGeometry") {
+			   type = "cube"
+			}
+		}*/
+		
+		
+		obj.syncProps.name = obj.name
+		obj.syncProps.posX = obj.position.x
+		obj.syncProps.posY = obj.position.y
+		obj.syncProps.posZ = obj.position.z
+		obj.syncProps.scaX = obj.scale.x
+		obj.syncProps.scaY = obj.scale.y
+		obj.syncProps.scaZ = obj.scale.z
+		obj.syncProps.rotX = obj.quaternion._x
+		obj.syncProps.rotY = obj.quaternion._y
+		obj.syncProps.rotZ = obj.quaternion._z
+		obj.syncProps.rotW = obj.quaternion._w
+		
+		obj.syncProps.colorR = obj.material.color.r
+		obj.syncProps.colorG = obj.material.color.g
+		obj.syncProps.colorB = obj.material.color.b
+		
+		obj.syncProps.transparency = obj.material.opacity
+		
+		
+		
+		return obj.syncProps
 	}
 	
 	newName(name) {
 		this.playerName = name
 		this.socket.emit("name changed", {"playerName": name})
+	}
+	
+	getObjectBySyncId(id) {
+		objList = []
+		allSceneObjects(OS.scene)
+		for(var i = 0; i < objList.length; i ++) {
+			if (!isVoid(objList[i].syncID)) {
+				if (objList[i].syncID == id) {
+					return objList[i];
+				}
+			}
+		}
 	}
 	
 	mapExisting() {
@@ -224,7 +377,7 @@ class Sockets extends OSModule {
 		
 		for(var i = 0; i < objList.length; i ++) {
 			if (!isVoid(objList[i].sync)) {
-				var socketObj = this.toSocketJSON(objList[i])
+				var socketObj = this.updateSyncProperties(objList[i])
 				
 				var found = false
 				for (var i2 = 0; i2 < this.objectMap.length; i2 ++) {
