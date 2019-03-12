@@ -1,9 +1,10 @@
 var fs = require("fs")
 var THREE = require("./threejs/three.js")
-eval(fs.readFileSync("threejs/additionalRenderers.js").toString())
-eval(fs.readFileSync("threejs/SceneUtils.js").toString())
+eval(fs.readFileSync(__dirname + "/threejs/additionalRenderers.js").toString())
+eval(fs.readFileSync(__dirname + "/threejs/SceneUtils.js").toString())
 const express = require('express')
 
+const EventEmitter = require('events');
 
 /*
 c# warn: controller sphere registeres with wrong id
@@ -11,9 +12,13 @@ c# warn: opening multiple sockets
 c# todo: undepricate user_id so playser acn leave gracefully
 */
 
-class AVROS {
+class AVROS extends EventEmitter{
 	constructor() {
+		
+        super()
         var self = this
+		
+		this.showLog = false
 		this.artificialLag = 1000
 		this.players = {}
 		this.entanglements = []
@@ -40,7 +45,56 @@ class AVROS {
 		}, 1000)
 		*/
 		
+		this.loadState()
+		
+		this.saveFile = setInterval(function() {
+			self.saveState()
+		}, 3000)
 	} 
+	
+	systemMessage(msg) {
+		this.emit('system message', msg)
+		if (this.showLog) {
+			console.log(msg)
+		}
+	}
+	
+	loadState() {
+		var saveFile = process.cwd() + "/save/saveFile.json";
+		
+		if (!fs.existsSync(process.cwd() + "/save")) {
+			fs.mkdirSync(process.cwd() + "/save");
+		}
+		if (!fs.existsSync(process.cwd() + "/save/saveFile.json")) {
+			fs.writeFileSync(saveFile, "{}");
+		}
+		try {
+			var saveData = JSON.parse(fs.readFileSync(saveFile).toString())
+		} catch(e){
+			if (e.message == "Unexpected end of JSON input") {
+				fs.writeFileSync(saveFile, "{}")
+				return
+			}
+		}
+		
+		
+		if (!isVoid(saveData.players)) {
+			this.players = saveData.players
+		}
+		if (!isVoid(saveData.requiredTasks)) {
+			this.requiredTasks = saveData.requiredTasks
+		}
+	}
+	
+	saveState() {
+		var savefile = process.cwd() + "/save/saveFile.json";
+		
+		var saveData = {
+			players: this.players,
+			requiredTasks: this.requiredTasks
+		}
+		fs.writeFile(savefile, JSON.stringify(saveData), function() {})
+	}
 	
 	open(port) {
         var self = this
@@ -48,7 +102,7 @@ class AVROS {
 		
 		this.app = express()
 
-		this.app.use(express.static('public'))
+		this.app.use(express.static(__dirname + '/public'))
 		
 		this.app.get('/players', function(req, res) {
 			res.send(JSON.stringify(self.players, 0, 4));
@@ -84,7 +138,7 @@ class AVROS {
 		server.listen(port);
 		
 		this.io.on('connection', function(socket) {
-			console.log("server: connection detected")
+			self.systemMessage("server: connection detected")
 			self.initSocket(socket)
 		})
 		
@@ -93,14 +147,17 @@ class AVROS {
 		self.initTimers()
 	}
 	
+	// Function: getPlayerSocket
+	// Returns socket.IO component of the connected player
 	getPlayerSocket(playerName) {
+		var self = this
 		var sockets = this.io.sockets.clients()
 		
 		var keys = Object.keys(sockets["sockets"])
 		for (var i = 0; i < keys.length; i ++) {
 			if (sockets.sockets[keys[i]].playerName == playerName) {
 				if (isVoid(sockets.sockets[keys[i]])) {
-					console.log("warnng: player "+playerName+" doesnt have a socket")
+					self.systemMessage("warnng: player "+playerName+" doesnt have a socket")
 				}
 				return sockets.sockets[keys[i]]
 			}
@@ -137,7 +194,7 @@ class AVROS {
 			//console.log(sockets["sockets"][keys[i]].playerName)
 			
 			if (isVoid(sockets["sockets"][keys[i]].playerName)) {
-				console.log("server: Unidentified socket disconnected")
+				this.systemMessage("server: Unidentified socket disconnected")
 				sockets["sockets"][keys[i]].disconnect()
 				continue
 			} else {
@@ -157,7 +214,7 @@ class AVROS {
 				delete(this.players[playerNames[i]])
 			}
 		}
-		console.log("server: no sockets "+ keys.length + " "+Object.keys(this.players))
+		this.systemMessage("server: no sockets "+ keys.length + " "+Object.keys(this.players))
 	}
 	/*
 	removePlayerOwnedObjects(playerName) {
@@ -236,7 +293,7 @@ class AVROS {
 		}
 	}
 	
-	isPersonal(obj) {
+	sPersonal(obj) {
 		var objs = this.allObjects()
 		for (var i = 0; i < objs.length; i ++) {
 			if (objs[i].object_id == obj.parent) {
@@ -301,7 +358,7 @@ class AVROS {
 				// check if object belongs to a disconnected player
 				if (!isVoid(this.players[playerNames[i]].objects[i2].owner)) {
 					if (isVoid(this.getPlayerSocket(obj.owner))) {
-						console.log("server: player "+playerNames[i]+ " is disconnected. "+obj.name+ " will be deleted")
+						this.systemMessage("server: player "+playerNames[i]+ " is disconnected. "+obj.name+ " will be deleted")
 						//this.getPlayerSocket(playerNames[i]).emit("object destroyed", obj)
 						
 						this.requiredTasks.push({
@@ -334,7 +391,7 @@ class AVROS {
 								if (!this.isSimilar(obj, obj2)) {
 									
 									if (obj.syncTime > obj2.syncTime) {
-										console.log("player "+playerNames[i3]+ " object "+obj2.name+ " is out of sync")
+										this.systemMessage("player "+playerNames[i3]+ " object "+obj2.name+ " is out of sync")
 									    //this.getPlayerSocket(playerNames[i3]).emit("object changed", obj)
 										this.requiredTasks.push({
 											"target": playerNames[i3],
@@ -342,7 +399,7 @@ class AVROS {
 											"object": obj2
 										})
 									} else {
-										console.log("player "+playerNames[i]+ " object "+obj.name+ " is out of sync")
+										this.systemMessage("player "+playerNames[i]+ " object "+obj.name+ " is out of sync")
 										//this.getPlayerSocket(playerNames[i]).emit("object changed", obj2)
 										this.requiredTasks.push({
 											"target": playerNames[i],
@@ -354,11 +411,11 @@ class AVROS {
 							}
 						}
 						if (!found) {
-							console.log("player "+playerNames[i3]+ " is missing object "+obj.name)
+							this.systemMessage("player "+playerNames[i3]+ " is missing object "+obj.name)
 							if (isVoid(this.getPlayerSocket(playerNames[i3]))) {
-								console.log("warning: player "+playerNames[i3]+ " is missing a socket")
+								this.systemMessage("warning: player "+playerNames[i3]+ " is missing a socket")
 							}
-							console.log(obj)
+							this.systemMessage(obj)
 							//this.getPlayerSocket(playerNames[i3]).emit("object changed", obj)
 							this.requiredTasks.push({
 								"target": playerNames[i3],
@@ -377,7 +434,7 @@ class AVROS {
 		})
 		
 		
-		console.log("nothing to sane")
+		this.systemMessage("nothing to sane")
 	}
 	
 	syncObjectWith(obj, master) {
@@ -389,7 +446,7 @@ class AVROS {
 	
 	registerObject(socket, data) {
 		if (data.name.search("Controller") == -1 && data.name.search("Camera") == -1) {
-			console.log("server "+socket.playerName+" registered object " + data.name + " " + data.object_id)
+			this.systemMessage("server "+socket.playerName+" registered object " + data.name + " " + data.object_id)
 		}
 		data.syncTime = (new Date()).getTime()
 		
@@ -409,7 +466,7 @@ class AVROS {
 		}
 		
 		if(isVoid(this.players[socket.playerName])){
-			console.log("server: warning; syncing before inited")
+			this.systemMessage("server: warning; syncing before inited")
 			return
 		}
 		//console.log("server "+socket.playerName+" registered object " + data.name + " " + data.object_id)
@@ -424,14 +481,14 @@ class AVROS {
 	
 	initSocket(socket) {
         var self = this
-		console.log("server: connection detected")
+		this.systemMessage("server: connection detected")
 
         socket.inited = false
 		socket.on("syncronization event", function(data) {
 			//console.log("server: sync ")
 			//console.log(JSON.stringify(data, 0, 4))
 			if (isVoid(data)) {
-				console.warn("server: bad client dsconnected")
+				self.systemMessage("server: bad client dsconnected")
 				socket.disconnect()
 				return
 			}
@@ -451,15 +508,13 @@ class AVROS {
             self.changeObject(socket, data)
         })
 
-		console.log("server: who are you")
+		this.systemMessage("server: who are you")
 		socket.emit("who are you")
 		socket.on("i am", function (data) {
-            setTimeout(function() {
-                socket.emit("tts", {"say": "Hello " + data["playerName"]})
-            }, 2000)
 			socket.playerName = data["playerName"]
 			socket.emit("connection accepted")
 			socket.emit("syncronization event callback")
+			
 		})
 		
         socket.on("name changed", function(data) {
@@ -468,7 +523,7 @@ class AVROS {
 		
 		
 		socket.on('disconnect', function(obj) {
-			console.log(socket.playerName+" left the server")
+			self.systemMessage(socket.playerName+" left the server")
 			delete(self.players[socket.playerName])
 		})
 	}
@@ -480,6 +535,8 @@ class AVROS {
 		var player = this.parseSyncData(data["data"])
 		
 		var controllerDistraction = 0
+		
+		var firstConnect = false
 		
 		if (isVoid(this.players[name])) {
 			
@@ -495,8 +552,8 @@ class AVROS {
             player.head.object_id = this.generateId()
             player.objects = []
 			
-			console.log("server: "+name+" connected")
-			
+			self.systemMessage("server: "+name+" connected")
+			firstConnect = true
 		} else {
             player.objects = this.players[name].objects
 			player.leftController.object_id = this.players[name].leftController.object_id
@@ -558,11 +615,16 @@ class AVROS {
 		
 		this.players[name] = player
 		
+		
+		if (firstConnect) {
+			self.emit('player entered', name);
+		}
+		
     }
 
     parseSyncData(data) {
 		if (isVoid(data)) {
-			console.log("server: sync data is void")
+			this.systemMessage("server: sync data is void")
 			return
 		}
         var parse = data.split("|")
