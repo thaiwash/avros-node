@@ -1,10 +1,10 @@
 var fs = require("fs")
 var THREE = require("./threejs/three.js")
+const PublicMethods = require('./PublicMethods.js')
 eval(fs.readFileSync(__dirname + "/threejs/additionalRenderers.js").toString())
 eval(fs.readFileSync(__dirname + "/threejs/SceneUtils.js").toString())
 const express = require('express')
 
-const EventEmitter = require('events');
 
 /*
 c# warn: controller sphere registeres with wrong id
@@ -12,7 +12,7 @@ c# warn: opening multiple sockets
 c# todo: undepricate user_id so playser acn leave gracefully
 */
 
-class AVROS extends EventEmitter{
+class AVROS extends PublicMethods {
 	constructor() {
 		
         super()
@@ -147,22 +147,6 @@ class AVROS extends EventEmitter{
 		self.initTimers()
 	}
 	
-	// Function: getPlayerSocket
-	// Returns socket.IO component of the connected player
-	getPlayerSocket(playerName) {
-		var self = this
-		var sockets = this.io.sockets.clients()
-		
-		var keys = Object.keys(sockets["sockets"])
-		for (var i = 0; i < keys.length; i ++) {
-			if (sockets.sockets[keys[i]].playerName == playerName) {
-				if (isVoid(sockets.sockets[keys[i]])) {
-					self.systemMessage("warnng: player "+playerName+" doesnt have a socket")
-				}
-				return sockets.sockets[keys[i]]
-			}
-		}
-	}
 	
 	initTimers() {
         var self = this
@@ -263,19 +247,6 @@ class AVROS extends EventEmitter{
 		return true
 	}
 	
-	allObjects() {
-		var objs = []
-		var playerNames = Object.keys(this.players)
-		for (var i = 0; i < playerNames.length; i ++) {
-			if (isVoid(this.players[playerNames[i]].objects)) {
-				this.players[playerNames[i]].objects = []
-			}
-			for (var i2 = 0; i2 < this.players[playerNames[i]].objects.length; i2 ++) {
-				objs.push(this.players[playerNames[i]][i2])
-			}
-		}
-		return objs
-	}
 	
 	bindScan() {
 		//console.log("bind scan")
