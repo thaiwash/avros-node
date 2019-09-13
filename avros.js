@@ -1,3 +1,4 @@
+
 const { createCanvas, loadImage } = require('canvas')
 
 var canvasWidth = 500;
@@ -21,6 +22,7 @@ var document = {
     }
 };
 
+
 var fs = require("fs")
 var THREE = require("./threejs/three.js")
 const PublicMethods = require('./PublicMethods.js')
@@ -31,7 +33,7 @@ const express = require('express')
 
 /*
 c# warn: controller sphere registeres with wrong id
-c# warn: opening multiple sockets
+c# warn: opening multiple sockets 
 c# todo: undepricate user_id so playser acn leave gracefully
 */
 
@@ -39,10 +41,10 @@ class AVROS extends PublicMethods {
 	constructor() {
 		
         super()
+		this.THREE = THREE
         var self = this
 		
 		this.showLog = false
-		this.artificialLag = 1000
 		this.players = {}
 		this.entanglements = []
 		this.requiredTasks = []
@@ -173,17 +175,20 @@ class AVROS extends PublicMethods {
 	
 	initTimers() {
         var self = this
-		this.bindScanInterval = setInterval(function() {
-			self.bindScan()
-		}, 1000)
-		
 		this.socketCleanupInterval = setInterval(function() {
 			self.socketCleanup()
 		}, 10000)
 		
+		this.rationalizationInterval = setInterval(function() {
+			self.rationalizeObjects()
+		}, 3000)
+		/*
+		this.bindScanInterval = setInterval(function() {
+			self.bindScan()
+		}, 1000)
 		this.entanglementSyncInterval = setInterval(function() {
 			self.entanglementSync()
-		}, 3000)
+		}, 3000)*/
 	}
 	
 	socketCleanup() {
@@ -270,71 +275,6 @@ class AVROS extends PublicMethods {
 		return true
 	}
 	
-	
-	bindScan() {
-		//console.log("bind scan")
-		var objs = this.allObjects()
-		for (var i = 0; i < objs.length; i ++) {
-			var group = []
-			for (var i2 = 0; i2 < objs.length; i2 ++) {
-				if (this.isSimilar(objs[i], objs[i2])) {
-					group.push(objs[i2])
-				}
-			}
-			if (group.length > 1) {
-				this.entangle(group)
-			}
-		}
-	}
-	
-	sPersonal(obj) {
-		var objs = this.allObjects()
-		for (var i = 0; i < objs.length; i ++) {
-			if (objs[i].object_id == obj.parent) {
-				if (this.personal.indexOf(objs[i].name) != -1) {
-					return true
-				}
-				obj = objs[i]
-				if (isVoid(obj.parent)) {
-					return false
-				}
-				i = 0
-			}
-		}
-		return false
-	}
-	
-	entangle(group) {
-		if (isPersonal(group[0])) {
-			return
-		}
-		
-		for (var i = 0; i < this.entangelements.length; i ++) {
-			if (this.entangelements[i][0].name == group[0].name) {
-				this.entangelements[i] = group[0]
-				return
-			}
-		}
-		
-		this.entangelements.push(group)
-	}
-	
-	
-	entanglementSync() {
-		for (var i = 0; i < this.entanglements.length; i ++) {
-			var master = this.entanglements[i][0]
-			for (var i2 = 1; i2 < this.entanglements.length; i2 ++) {
-				if (!isSimilar(master, this.entanglements[i][i2])) {
-					this.entanglements[i][i2] = this.syncObjectWith(
-						this.entanglements[i][i2], 
-						master
-					)
-				}
-			}
-		}
-		
-		this.rationalizeObjects()
-	}
 	
 	// check for missing objects
 	// check that all objects are similiar on all sovkets
@@ -439,9 +379,16 @@ class AVROS extends PublicMethods {
 	}
 	
 	registerObject(socket, data) {
+		//onsole.assert(isVoid(socket), "socket is void")
+		if (isVoid(socket)) {
+			return
+		}
+		
 		if (data.name.search("Controller") == -1 && data.name.search("Camera") == -1) {
 			this.systemMessage("server "+socket.playerName+" registered object " + data.name + " " + data.object_id)
 		}
+		this.emit("object changed", data)
+		
 		data.syncTime = (new Date()).getTime()
 		
 		var objs = this.players[socket.playerName].objects
@@ -452,6 +399,7 @@ class AVROS extends PublicMethods {
 			}
 		}
 		this.players[socket.playerName].objects.push(data)
+		
 	}
 	
 	changeObject(socket, data) {
@@ -487,11 +435,11 @@ class AVROS extends PublicMethods {
 				return
 			}
 			self.syncEvent(socket, data)
-			
+			self.emit("player update", socket.playerName)
 			clearTimeout(self.players[socket.playerName].syncTimer)
 			setTimeout(function() {
 				socket.emit("syncronization event callback")
-			}, self.artificialLag)
+			}, 100)
         })
 		
         socket.on("object changed", function(data) {
@@ -508,6 +456,7 @@ class AVROS extends PublicMethods {
 			socket.playerName = data["playerName"]
 			socket.emit("connection accepted")
 			socket.emit("syncronization event callback")
+			self.systemMessage(data["playerName"] + " identified")
 			
 		})
 		
@@ -609,11 +558,9 @@ class AVROS extends PublicMethods {
 		
 		this.players[name] = player
 		
-		
 		if (firstConnect) {
 			self.emit('player entered', name);
 		}
-		
     }
 
     parseSyncData(data) {
