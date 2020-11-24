@@ -2,7 +2,7 @@
   "name": "avros",
   "version": "0.0.4",
   "description": "AROS 3D WebApp wrapper",
-  "main": "avros.js",
+  "main": "src/main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

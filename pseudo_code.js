@@ -1,12 +1,11 @@
 var AVROS = require("avros");
 
-var instance = AVROS.Serve(9774);
+var instance = new AVROS()
+instance.Serve(9774)
+var obj = AVROS.CreateObject("cube")
 
-instance.MongoDB("url")
-instance.EnableMultiplayer();
+instance.SpawnObject(obj)
+obj.position = instance.player[0].frontPosition()
 
-var obj = AVROS.CreateObject({"type": "cube")
-
-instance.SpawnObject()
-
-obj.position = instance.player[0].frontPosition();
+//instance.MongoDB("url")
+//instance.EnableMultiplayer()

@@ -2,8 +2,8 @@
 /**
  * @author Taivas Gogoljuk
  *
- **/
-
+ * @module Main
+ */
 
  /**
  * Main class of the system, it works like an event emitter
@@ -47,8 +47,7 @@ class AVROS extends EventEmitter {
      * Connected event.
      *
      * @event connected
-     * @type {object}
-     * @property {object}  - socket
+     * @property {object}  - passes the connected socket
      */
       self.emit("connected", socket)
 		})
@@ -58,10 +57,7 @@ class AVROS extends EventEmitter {
   }
 }
 
-// methodA(a, b) in class Foo
-AVROS.prototype.methodA = function(a, b) {
-  // do whatever...
-}
+Object.assign(AVROS.prototype, require("./core/CreateObject"))
 
 
 
@@ -72,4 +68,4 @@ function isVoid(variable) {
     return false
 }
 
-module.exports = new AVROS()
+module.exports = AVROS
