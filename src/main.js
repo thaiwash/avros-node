@@ -5,10 +5,13 @@
  * @module Main
  */
 
- /**
- * Main class of the system, it works like an event emitter
- * @class AVROS
- */
+const EventEmitter = require('events');
+
+/**
+* Main class of the system, it works like an event emitter
+* @class AVROS
+*/
+
 class AVROS extends EventEmitter {
   constructor() {
     super()
