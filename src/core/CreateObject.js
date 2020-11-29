@@ -2,19 +2,22 @@
  * @author Taivas Gogoljuk
  **/
 
-
-
-  /**
-   * Creates a new object
-   * @constructor
-   * @param {String} type - cube sphere or plane
-   * @returns {Object} Returns the generated object
-   */
-
  module.exports = {
-   "CreatePrimitiveObject": function(type) {
+   /**
+    * Creates a new object
+    * @method
+    * @param {String} type - cube sphere or plane
+    * @returns {Object} Returns the generated object
+    */
+   "CreateObject": function(type) {
      return {"obejct_id": generateId(), "type": type}
    },
+   /**
+    * Spawns a prefabricated asset made with unity
+    * @method
+    * @param {String} asset - path to asset
+    * @returns {Object} Returns the generated object
+    */
    "SpawnAsset": function(type) {
      return {"obejct_id": generateId(), "type": type}
    }

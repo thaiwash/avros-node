@@ -7,6 +7,14 @@
 
 const EventEmitter = require('events');
 
+function isVoid(variable) {
+	if (typeof variable === "undefined") {
+        return true
+	}
+    return false
+}
+
+
 /**
 * Main class of the system, it works like an event emitter
 * @class AVROS
@@ -16,7 +24,7 @@ class AVROS extends EventEmitter {
   constructor() {
     super()
 
-    self.players = []
+    this.players = []
   }
 
     /**
@@ -26,7 +34,8 @@ class AVROS extends EventEmitter {
   Serve(port) {
     var self = this
 
-  	this.app = require('express')()
+    var express = require('express');
+  	this.app = express()
     this.app.use(express.static(__dirname + '/public'))
 
     this.app.get('/players', function(req, res) {
@@ -35,7 +44,7 @@ class AVROS extends EventEmitter {
   	})
 
   	this.server = require('http').createServer(this.app);
-		this.io = require('socket.io')(server);
+		this.io = require('socket.io')(this.server);
 
 		this.server.listen(port);
 
@@ -61,14 +70,7 @@ class AVROS extends EventEmitter {
 }
 
 Object.assign(AVROS.prototype, require("./core/CreateObject"))
+Object.assign(AVROS.prototype, require("./core/SocketRationalization"))
 
-
-
-function isVoid(variable) {
-	if (typeof variable === "undefined") {
-        return true
-	}
-    return false
-}
 
 module.exports = AVROS
