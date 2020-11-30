@@ -33,17 +33,17 @@ const express = require('express')
 
 /*
 c# warn: controller sphere registeres with wrong id
-c# warn: opening multiple sockets 
+c# warn: opening multiple sockets
 c# todo: undepricate user_id so playser acn leave gracefully
 */
 
 class AVROS extends PublicMethods {
 	constructor() {
-		
+
         super()
 		this.THREE = THREE
         var self = this
-		
+
 		this.showLog = false
 		this.players = {}
 		this.entanglements = []
@@ -53,7 +53,7 @@ class AVROS extends PublicMethods {
 			"Keyboard",
 			"Desktop Mirror"
 		]
-		
+
 		this.personalObjectDefinitions = {
 			"Main Menu": "cube",
 			"Main MenuMainPlane": "plane",
@@ -63,30 +63,30 @@ class AVROS extends PublicMethods {
 			"Main MenuMainPlane": "plane",
 			"Main MenuBackPlane": "plane"
 		}
-		
+
 		/* move to object property
 		this.textureUpdateInterval = setInterval(function() {
 			self.textureUpdate()
 		}, 1000)
 		*/
-		
+
 		this.loadState()
-		
+
 		this.saveFile = setInterval(function() {
 			self.saveState()
 		}, 3000)
-	} 
-	
+	}
+
 	systemMessage(msg) {
 		this.emit('system message', msg)
 		if (this.showLog) {
 			console.log(msg)
 		}
 	}
-	
+
 	loadState() {
 		var saveFile = process.cwd() + "/save/saveFile.json";
-		
+
 		if (!fs.existsSync(process.cwd() + "/save")) {
 			fs.mkdirSync(process.cwd() + "/save");
 		}
@@ -101,8 +101,8 @@ class AVROS extends PublicMethods {
 				return
 			}
 		}
-		
-		
+
+
 		if (!isVoid(saveData.players)) {
 			this.players = saveData.players
 		}
@@ -110,25 +110,25 @@ class AVROS extends PublicMethods {
 			this.requiredTasks = saveData.requiredTasks
 		}
 	}
-	
+
 	saveState() {
 		var savefile = process.cwd() + "/save/saveFile.json";
-		
+
 		var saveData = {
 			players: this.players,
 			requiredTasks: this.requiredTasks
 		}
 		fs.writeFile(savefile, JSON.stringify(saveData), function() {})
 	}
-	
+
 	open(port) {
         var self = this
-		
-		
+
+
 		this.app = express()
 
 		this.app.use(express.static(__dirname + '/public'))
-		
+
 		this.app.get('/players', function(req, res) {
 			res.send(JSON.stringify(self.players, 0, 4));
 			res.end();
@@ -142,12 +142,12 @@ class AVROS extends PublicMethods {
 					res.end();
 				}
 			}
-			
+
 			if (req.url == "/") {
 				res.write(fs.readFileSync("./public/index.html"));
 				res.end();
 			}
-			
+
 			if (req.url == "/players") {
 				res.write(JSON.stringify(self.players, 0, 4));
 				res.end();
@@ -157,28 +157,28 @@ class AVROS extends PublicMethods {
 				res.end();
 			}
 		})*/
-		
+
 		this.io = require('socket.io')(server);
 
 		server.listen(port);
-		
+
 		this.io.on('connection', function(socket) {
 			self.systemMessage("server: connection detected")
 			self.initSocket(socket)
 		})
-		
-		
+
+
 		console.log("server: AVROS server listening on port "+ port)
 		self.initTimers()
 	}
-	
-	
+
+
 	initTimers() {
         var self = this
 		this.socketCleanupInterval = setInterval(function() {
 			self.socketCleanup()
 		}, 10000)
-		
+
 		this.rationalizationInterval = setInterval(function() {
 			self.rationalizeObjects()
 		}, 3000)
@@ -190,21 +190,21 @@ class AVROS extends PublicMethods {
 			self.entanglementSync()
 		}, 3000)*/
 	}
-	
+
 	socketCleanup() {
 		var sockets = this.io.sockets.clients()
 		//console.log(Object.keys(sockets))
 		var keys = Object.keys(sockets["sockets"])
-		
+
 		var connectedPlayers = []
 		for (var i = 0; i < keys.length; i ++) {
 			//(sockets[keys[i]])
 			//console.log(keys[i])
 			//console.log(Object.keys(sockets["sockets"][keys[i]]))
 			//console.log(sockets["sockets"][keys[i]].playerName)
-			
+
 			//console.log(sockets["sockets"][keys[i]].playerName)
-			
+
 			if (isVoid(sockets["sockets"][keys[i]].playerName)) {
 				this.systemMessage("server: Unidentified socket disconnected")
 				sockets["sockets"][keys[i]].disconnect()
@@ -218,7 +218,7 @@ class AVROS extends PublicMethods {
 				sockets["sockets"][keys[i]].disconnect()
 			}*/
 		}
-		
+
 		var playerNames = Object.keys(this.players)
 		for (var i = 0; i < playerNames.length; i ++) {
 			if (connectedPlayers.indexOf(playerNames[i]) == -1) {
@@ -237,20 +237,20 @@ class AVROS extends PublicMethods {
 				if (!isVoid(this.players[playerNames[i]][i2].owner)) {
 					if (this.players[playerNames[i]][i2].owner == playerName) {
 						this.deleteObject(this.players[playerNames[i]][i2])
-						
+
 					}
 				}
 				}
 			}
 		}
 	}*/
-	
+
 	deleteObject(socket, obj) {
 		socket.emit("object destroyed", obj)
 	}
-	
+
 	isSimilar(obj1, obj2) {
-		
+
 		if (isVoid(obj1)) {
 			return false
 		}
@@ -274,56 +274,56 @@ class AVROS extends PublicMethods {
 		}
 		return true
 	}
-	
-	
+
+
 	// check for missing objects
 	// check that all objects are similiar on all sovkets
 	// check for no missing player owned objects
-	
-	
+
+
 	rationalizeObjects() {
-		
+
 		var objs = this.allObjects()
 		var playerNames = Object.keys(this.players)
 		for (var i = 0; i < playerNames.length; i ++) {
 			for (var i2 = 0; i2 < this.players[playerNames[i]].objects.length; i2 ++) {
 				var obj = this.players[playerNames[i]].objects[i2]
-				
+
 				// check if object belongs to a disconnected player
 				if (!isVoid(this.players[playerNames[i]].objects[i2].owner)) {
 					if (isVoid(this.getPlayerSocket(obj.owner))) {
 						this.systemMessage("server: player "+playerNames[i]+ " is disconnected. "+obj.name+ " will be deleted")
 						//this.getPlayerSocket(playerNames[i]).emit("object destroyed", obj)
-						
+
 						this.requiredTasks.push({
 							"target": playerNames[i],
 							"action": "object destroyed",
 							"object": obj
 						})
-							
+
 						this.players[playerNames[i]].objects.splice(i2, 1)
 						i2 = 0
 					}
 				}
-				
-				
+
+
 				if (!isVoid(obj.type)) {
 					for (var i3 = 0; i3 < playerNames.length; i3 ++) {
-						
-							
+
+
 						// check for object existance
 						var found = false
-						
+
 						for (var i4 = 0; i4 < this.players[playerNames[i3]].objects.length; i4 ++) {
 							var obj2 = this.players[playerNames[i3]].objects[i4]
 							if (obj.name == obj2.name) {
 								var found = true
 							}
-							
+
 							// check for OOS
 							if (obj.object_id == obj2.object_id) {
 								if (!this.isSimilar(obj, obj2)) {
-									
+
 									if (obj.syncTime > obj2.syncTime) {
 										this.systemMessage("player "+playerNames[i3]+ " object "+obj2.name+ " is out of sync")
 									    //this.getPlayerSocket(playerNames[i3]).emit("object changed", obj)
@@ -357,70 +357,70 @@ class AVROS extends PublicMethods {
 								"object": obj
 							})
 						}
-						
+
 					}
 				}
 			}
 		}
-		
+
 		this.requiredTasks.sort(function(a, b) {
 			return a.object.syncTime - b.object.syncTime;
 		})
-		
-		
+
+
 		this.systemMessage("nothing to sane")
 	}
-	
+
 	syncObjectWith(obj, master) {
 		var newObj = master
 		newObj.object_id = obj.object_id
 		this.io.sockets.emit("object changed", newObj)
 		return newObj
 	}
-	
-	registerObject(socket, data) {
-		//onsole.assert(isVoid(socket), "socket is void")
-		if (isVoid(socket)) {
-			return
-		}
-		
-		if (data.name.search("Controller") == -1 && data.name.search("Camera") == -1) {
-			this.systemMessage("server "+socket.playerName+" registered object " + data.name + " " + data.object_id)
-		}
-		this.emit("object changed", data)
-		
-		data.syncTime = (new Date()).getTime()
-		
-		var objs = this.players[socket.playerName].objects
-		for (var i = 0; i < objs.length; i ++) {
-			if (objs[i].object_id == data.object_id) {
-				objs[i] = data
-				return
-			}
-		}
-		this.players[socket.playerName].objects.push(data)
-		
-	}
-	
-	changeObject(socket, data) {
-		if (isVoid(socket.playerName)) {
-			return
-		}
-		
-		if(isVoid(this.players[socket.playerName])){
-			this.systemMessage("server: warning; syncing before inited")
-			return
-		}
-		//console.log("server "+socket.playerName+" registered object " + data.name + " " + data.object_id)
-		
-		if (data.type != "") {
-			// let server handle syncing
-			//socket.broadcast.emit("object changed", data)
-		}
-		
-		this.registerObject(socket, data)
-	}
-	
+
+  	registerObject(socket, data) {
+      //onsole.assert(isVoid(socket), "socket is void")
+  		if (isVoid(socket)) {
+  			return
+  		}
+
+  		if (data.name.search("Controller") == -1 && data.name.search("Camera") == -1) {
+  			this.systemMessage("server "+socket.playerName+" registered object " + data.name + " " + data.object_id)
+  		}
+  		this.emit("object changed", data)
+
+  		data.syncTime = (new Date()).getTime()
+
+  		var objs = this.players[socket.playerName].objects
+  		for (var i = 0; i < objs.length; i ++) {
+  			if (objs[i].object_id == data.object_id) {
+  				objs[i] = data
+  				return
+  			}
+  		}
+  		this.players[socket.playerName].objects.push(data)
+
+  	}
+
+    	changeObject(socket, data) {
+    		if (isVoid(socket.playerName)) {
+    			return
+    		}
+
+    		if(isVoid(this.players[socket.playerName])){
+    			this.systemMessage("server: warning; syncing before inited")
+    			return
+    		}
+    		//console.log("server "+socket.playerName+" registered object " + data.name + " " + data.object_id)
+
+    		if (data.type != "") {
+    			// let server handle syncing
+    			//socket.broadcast.emit("object changed", data)
+    		}
+
+    		this.registerObject(socket, data)
+    	}
+
 	initSocket(socket) {
         var self = this
 		this.systemMessage("server: connection detected")
@@ -441,11 +441,11 @@ class AVROS extends PublicMethods {
 				socket.emit("syncronization event callback")
 			}, 100)
         })
-		
+
         socket.on("object changed", function(data) {
             self.changeObject(socket, data)
         })
-		
+
         socket.on("object registered", function(data) {
             self.changeObject(socket, data)
         })
@@ -457,14 +457,14 @@ class AVROS extends PublicMethods {
 			socket.emit("connection accepted")
 			socket.emit("syncronization event callback")
 			self.systemMessage(data["playerName"] + " identified")
-			
+
 		})
-		
+
         socket.on("name changed", function(data) {
 			socket.playerName = data["playerName"]
         })
-		
-		
+
+
 		socket.on('disconnect', function(obj) {
 			self.systemMessage(socket.playerName+" left the server")
 			delete(self.players[socket.playerName])
@@ -474,15 +474,15 @@ class AVROS extends PublicMethods {
 	syncEvent(socket, data) {
 		var name = socket.playerName
         var self = this
-		
+
 		var player = this.parseSyncData(data["data"])
-		
+
 		var controllerDistraction = 0
-		
+
 		var firstConnect = false
-		
+
 		if (isVoid(this.players[name])) {
-			
+
 			socket.syncTimeout = setTimeout(function() {
 				socket.emit("syncronization event callback")
 				self.syncEvent(socket, data)
@@ -494,7 +494,7 @@ class AVROS extends PublicMethods {
             player.rightController.object_id = this.generateId()
             player.head.object_id = this.generateId()
             player.objects = []
-			
+
 			self.systemMessage("server: "+name+" connected")
 			firstConnect = true
 		} else {
@@ -503,7 +503,7 @@ class AVROS extends PublicMethods {
 			player.rightController.object_id = this.players[name].rightController.object_id
 			player.head.object_id = this.players[name].head.object_id
 		}
-		
+
 		var evt = {
 			"object_id": player.leftController.object_id.toString(),
 			"type": "sphere",
@@ -518,7 +518,7 @@ class AVROS extends PublicMethods {
 		}
 		//socket.emit("object changed", evt)
 		//socket.broadcast.emit("object changed", evt)
-				
+
 		var evt2 = {
 			"object_id": player.rightController.object_id.toString(),
 			"type": "sphere",
@@ -534,7 +534,7 @@ class AVROS extends PublicMethods {
 		//console.log(evt2.name)
 		//socket.emit("object changed", evt2)
 		//socket.broadcast.emit("object changed", evt2)
-		
+
 		var evt3 = {
 			"object_id": player.head.object_id.toString(),
 			"type": "sphere",
@@ -554,10 +554,10 @@ class AVROS extends PublicMethods {
 		//console.log(evt3.name)
 		//socket.emit("object changed", evt2)
 		//socket.broadcast.emit("object changed", evt3)
-		
-		
+
+
 		this.players[name] = player
-		
+
 		if (firstConnect) {
 			self.emit('player entered', name);
 		}
@@ -620,14 +620,14 @@ class AVROS extends PublicMethods {
         user.rightController.grabberId = parse[6]
         user.leftController.grabberId = parse[7]
 
-		return user
+		    return user
     }
-	
-	generateId() {
-		var min=1; 
-		var max=100000;  
-		return Math.floor(Math.random() * (+max - +min)) + +min; 
-	}
+
+  	generateId() {
+    		var min=1;
+    		var max=100000;
+    		return Math.floor(Math.random() * (+max - +min)) + +min;
+  	}
 }
 
 function isVoid(variable) {

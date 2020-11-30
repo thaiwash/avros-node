@@ -4,15 +4,23 @@
  *
  * @module Main
  */
+ "use strict";
+
 
 const EventEmitter = require('events');
 
-function isVoid(variable) {
-	if (typeof variable === "undefined") {
-        return true
-	}
-    return false
+//Object.assign(AVROS.prototype, require("./core/CreateObject"))
+var math3d = require("math3d")
+global.Vector3 = math3d.Vector3;
+global.Quaternion = math3d.Quaternion;
+
+global.isVoid = function isVoid(input) {
+    if (typeof input == "undefined") {
+			return true
+		}
+		return false
 }
+
 
 
 /**
@@ -66,7 +74,22 @@ class AVROS extends EventEmitter {
 
 
 		console.log("Server: AVROS server listening on port "+ port)
-  }
+	  }
+
+    /**
+     * CCreates an object id
+     * @method
+     * @returns {Int} Returns the generated id
+     */
+		generateId() {
+			var min=1;
+			var max=100000;
+			return Math.floor(Math.random() * (+max - +min)) + +min;
+		}
+
+		systemMessage(message) {
+			console.log(message)
+		}
 }
 
 Object.assign(AVROS.prototype, require("./core/CreateObject"))

@@ -10,7 +10,7 @@
     * @returns {Object} Returns the generated object
     */
    "CreateObject": function(type) {
-     return {"obejct_id": generateId(), "type": type}
+     return {"object_id": generateId(), "type": type}
    },
    /**
     * Spawns a prefabricated asset made with unity
@@ -19,7 +19,7 @@
     * @returns {Object} Returns the generated object
     */
    "SpawnAsset": function(type) {
-     return {"obejct_id": generateId(), "type": type}
+     return {"object_id": generateId(), "type": type}
    }
  }
 

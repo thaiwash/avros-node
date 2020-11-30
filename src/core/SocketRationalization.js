@@ -5,8 +5,8 @@
  socket connection pipeline.
  **/
 
-module.exports = {
-  "initSocket": function(socket) {
+ module.exports = {
+  "InitSocket": function(socket) {
     var self = this
     this.systemMessage("server: connection detected")
 
@@ -33,11 +33,11 @@ module.exports = {
     })
 
     socket.on("object changed", function(data) {
-      self.changeObject(socket, data)
+      self.changeObject(data)
     })
 
     socket.on("object registered", function(data) {
-      self.changeObject(socket, data)
+      self.changeObject(data)
     })
 
     this.systemMessage("server: who are you")
@@ -61,7 +61,7 @@ module.exports = {
     })
   },
 
-  "syncEvent": function(socket, data) {
+  "SyncEvent": function(socket, data) {
     var name = socket.playerName
     var self = this
 
@@ -94,48 +94,6 @@ module.exports = {
       player.head.object_id = this.players[name].head.object_id
     }
 
-    var showHeftHand = {
-      "object_id": player.leftController.object_id.toString(),
-      "type": "sphere",
-      "scaleX": "0.04500",
-      "scaleY": "0.04500",
-      "scaleZ": "0.04500",
-      "posX": (player.leftController.position.x + controllerDistraction).toString(),
-      "posY": player.leftController.position.y.toString(),
-      "posZ": player.leftController.position.z.toString(),
-      "name": name + "LeftController",
-      "owner": name
-    }
-
-    var showRightHand = {
-      "object_id": player.rightController.object_id.toString(),
-      "type": "sphere",
-      "scaleX": "0.04500",
-      "scaleY": "0.04500",
-      "scaleZ": "0.04500",
-      "posX": (player.rightController.position.x + controllerDistraction).toString(),
-      "posY": player.rightController.position.y.toString(),
-      "posZ": player.rightController.position.z.toString(),
-      "name": name + "RightController",
-      "owner": name
-    }
-
-    var showHead = {
-      "object_id": player.head.object_id.toString(),
-      "type": "sphere",
-      "scaleX": "0.04500",
-      "scaleY": "0.04500",
-      "scaleZ": "0.04500",
-      "posX": player.head.position.x.toString(),
-      "posY": player.head.position.y.toString(),
-      "posZ": player.head.position.z.toString(),
-      "rotX": player.head.rotation._x.toString(),
-      "rotY": player.head.rotation._y.toString(),
-      "rotZ": player.head.rotation._z.toString(),
-      "rotW": player.head.rotation._w.toString(),
-      "name": "PlayerCamera",
-      "owner": name
-    }
 
 
     this.players[name] = player
@@ -143,9 +101,9 @@ module.exports = {
     if (firstConnect) {
       self.emit('player entered', name);
     }
-  }
+  },
 
-  parseSyncData(data) {
+  "ParseSyncData": function(data) {
     if (isVoid(data)) {
       this.systemMessage("server: sync data is void")
       return
@@ -163,36 +121,36 @@ module.exports = {
     }
     var user = {}
     user.head = {}
-    user.head.position = new THREE.Vector3(
+    user.head.position = new Vector3(
       parseFloat(values[0][0]),
       parseFloat(values[0][1]),
       parseFloat(values[0][2])
     )
-    user.head.rotation = new THREE.Quaternion(
+    user.head.rotation = new Quaternion(
       parseFloat(values[1][0]),
       parseFloat(values[1][1]),
       parseFloat(values[1][2]),
       parseFloat(values[1][3])
     )
     user.rightController = {}
-    user.rightController.position = new THREE.Vector3(
+    user.rightController.position = new Vector3(
       parseFloat(values[2][0]),
       parseFloat(values[2][1]),
       parseFloat(values[2][2])
     )
-    user.rightController.rotation = new THREE.Quaternion(
+    user.rightController.rotation = new Quaternion(
       parseFloat(values[3][0]),
       parseFloat(values[3][1]),
       parseFloat(values[3][2]),
       parseFloat(values[3][3])
     )
     user.leftController = {}
-    user.leftController.position = new THREE.Vector3(
+    user.leftController.position = new Vector3(
       parseFloat(values[4][0]),
       parseFloat(values[4][1]),
       parseFloat(values[4][2])
     )
-    user.leftController.rotation = new THREE.Quaternion(
+    user.leftController.rotation = new Quaternion(
       parseFloat(values[5][0]),
       parseFloat(values[5][1]),
       parseFloat(values[5][2]),
@@ -204,3 +162,4 @@ module.exports = {
 
     return user
   }
+}
