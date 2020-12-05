@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Home</title>
+    <title>JSDoc: Source: core/CreateObject.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,32 +17,54 @@
 
 <div id="main">
 
-    <h1 class="page-title">Home</h1>
+    <h1 class="page-title">Source: core/CreateObject.js</h1>
 
     
 
 
 
     
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @author Taivas Gogoljuk
+ **/
+
+module.exports = {
+  /**
+   * Creates a new object
+   * @method
+   * @param {String} type - cube sphere or plane
+   * @returns {Object} Returns the generated object
+   */
+  "CreateObject": function(type) {
+    return {
+      "object_id": generateId(),
+      "type": type
+    }
+  },
+  /**
+   * Spawns a prefabricated asset made with unity
+   * @method
+   * @param {String} asset - path to asset
+   * @returns {Object} Returns the generated object
+   */
+  "SpawnAsset": function(type) {
+    return {
+      "object_id": generateId(),
+      "type": type
+    }
+  }
+}
 
 
-    <h3> </h3>
-
-
-
-
-
-
-
-
-
-
-    
-
-
-
-
-
+function generateId() {
+  var min = 1;
+  var max = 100000;
+  return Math.floor(Math.random() * (+max - +min)) + +min;
+}</code></pre>
+        </article>
+    </section>
 
 
 

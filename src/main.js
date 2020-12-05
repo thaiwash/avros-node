@@ -4,7 +4,7 @@
  *
  * @module Main
  */
- "use strict";
+"use strict";
 
 
 const EventEmitter = require('events');
@@ -15,18 +15,18 @@ global.Vector3 = math3d.Vector3;
 global.Quaternion = math3d.Quaternion;
 
 global.isVoid = function isVoid(input) {
-    if (typeof input == "undefined") {
-			return true
-		}
-		return false
+  if (typeof input == "undefined") {
+    return true
+  }
+  return false
 }
 
 
 
 /**
-* Main class of the system, it works like an event emitter
-* @class AVROS
-*/
+ * Main class of the system, it works like an event emitter
+ * @class AVROS
+ */
 
 class AVROS extends EventEmitter {
   constructor() {
@@ -35,65 +35,84 @@ class AVROS extends EventEmitter {
     this.players = []
   }
 
-    /**
-     * Opens a socket port for an AVROS application
-     * @param {Number} port - The port number to use.
-     */
+  /**
+   * Opens a socket port for an AVROS application
+   * @param {Number} port - The port number to use.
+   */
   Serve(port) {
     var self = this
 
     var express = require('express');
-  	this.app = express()
+    this.app = express()
     this.app.use(express.static(__dirname + '/public'))
 
     this.app.get('/players', function(req, res) {
-  		res.send(JSON.stringify(self.players, 0, 4));
-  		res.end();
-  	})
+      res.send(JSON.stringify(self.players, 0, 4));
+      res.end();
+    })
 
-  	this.server = require('http').createServer(this.app);
-		this.io = require('socket.io')(this.server);
+    this.server = require('http').createServer(this.app);
+    this.io = require('socket.io')(this.server);
 
-		this.server.listen(port);
+    this.server.listen(port);
 
     /**
-    * Socket Connection.
-    *
-    * @fires connected
-    */
-		this.io.on('connection', function(socket) {
-			self.initSocket(socket)
-      /**
-     * Connected event.
+     * Socket Connection.
      *
-     * @event connected
-     * @property {object}  - passes the connected socket
+     * @fires connected
      */
+    this.io.on('connection', function(socket) {
+      self.InitSocket(socket)
+      /**
+       * Connected event.
+       *
+       * @event connected
+       * @property {object}  - passes the connected socket
+       */
       self.emit("connected", socket)
-		})
 
 
-		console.log("Server: AVROS server listening on port "+ port)
-	  }
 
-    /**
-     * CCreates an object id
-     * @method
-     * @returns {Int} Returns the generated id
-     */
-		generateId() {
-			var min=1;
-			var max=100000;
-			return Math.floor(Math.random() * (+max - +min)) + +min;
-		}
+    })
 
-		systemMessage(message) {
-			console.log(message)
-		}
+
+    console.log("Server: AVROS server listening on port " + port)
+  }
+
+  AppInformation(AppName, AppIcon) {
+    avros.io.on('connection', function(socket) {
+        socket.on('app info request', function() {
+            console.log("app info request")
+            avros.io.sockets.emit("app info callback",
+            {
+                "name" : AppName,
+                "icon" : fs.readFileSync(AppIcon, 'base64')
+            })
+        })
+
+    })
+  }
+
+  /**
+   * CCreates an object id
+   * @method
+   * @returns {Int} Returns the generated id
+   */
+  generateId() {
+    var min = 1;
+    var max = 100000;
+    return Math.floor(Math.random() * (+max - +min)) + +min;
+  }
+
+  systemMessage(message) {
+    console.log(message)
+  }
 }
 
 Object.assign(AVROS.prototype, require("./core/CreateObject"))
+Object.assign(AVROS.prototype, require("./core/ObjectManagement"))
 Object.assign(AVROS.prototype, require("./core/SocketRationalization"))
+Object.assign(AVROS.prototype, require("./database/ObjectDatabase"))
 
 
 module.exports = AVROS
