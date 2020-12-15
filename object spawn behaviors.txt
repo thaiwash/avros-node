@@ -1,0 +1,2 @@
+1. [environmental] Constant position.
+2. [inventory item] Spawn one for every connected player.

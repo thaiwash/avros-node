@@ -99,7 +99,15 @@ module.exports = {
     this.players[name] = player
 
     if (firstConnect) {
+      /**
+       * Called whever a new player connects.
+       *
+       * @event player entered
+       * @property {string}  - Player name
+       */
       self.emit('player entered', name);
+
+      //TODO: Spawn environment
     }
   },
 

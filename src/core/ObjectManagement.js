@@ -5,29 +5,39 @@ module.exports = {
   /**
    * Update object
    * @method
-   * @param {Object} Socket - updater's socket instance
    * @param {Object} Object - Object to update
+   * @param {String} PlayerName - Updated player's name. Required if instance sharing is disabled
    */
-  "UpdateObject": function(socket, data) {
-    if (isVoid(socket.playerName)) {
-      console.error("Unidentified user")
+  "UpdateObject": function(data, player) {
+    if (isVoid(player) && !this.instanceSharing) {
+      this.systemMessage("Player identity required for unsared instances", "ERROR")
       return
     }
-    if (isVoid(this.players[socket.playerName])) {
-      this.systemMessage("server: warning; syncing before inited")
-      return
-    }
+
+
     if (data.name.search("Controller") == -1 && data.name.search("Camera") == -1) {
-      this.systemMessage("server " + socket.playerName + " registered object " + data.name + " " + data.object_id)
+      this.systemMessage("server " + player + " registered object " + data.name + " " + data.object_id)
     }
-    this.emit("object changed", data)
 
 
-    data.syncTime = (new Date()).getTime()
-    this.RegisterObjectUpdate(socket.playerName, data)
+    //data.syncTime = (new Date()).getTime()
+    //this.RegisterObjectUpdate(player, data)
 
-    // multiplayer
-    socket.broadcast.emit("object changed", data)
+
+    if (!this.instanceSharing) {
+      if (isVoid(this.players[player].socket)) {
+        this.systemMessage("Player socket disintegrity " + player, "ERROR")
+        return
+      }
+      data.owner = player
+      this.emit("object changed", data)
+      this.players[player].socket.emit("object changed", data)
+    } else {
+      // multiplayer
+      // todo: broadcast to all players within a range
+      this.emit("object changed", data)
+      this.io.broadcast.emit("object changed", data)
+    }
 
     /*
     // Update player spesific object ledger

@@ -32,7 +32,15 @@ class AVROS extends EventEmitter {
   constructor() {
     super()
 
+    this.instanceSharing = false
     this.players = []
+  }
+
+  /**
+   * Enables instance sharing
+   */
+  EnableMultiplayer() {
+    this.instanceSharing = true
   }
 
   /**
@@ -79,22 +87,9 @@ class AVROS extends EventEmitter {
     console.log("Server: AVROS server listening on port " + port)
   }
 
-  AppInformation(AppName, AppIcon) {
-    avros.io.on('connection', function(socket) {
-        socket.on('app info request', function() {
-            console.log("app info request")
-            avros.io.sockets.emit("app info callback",
-            {
-                "name" : AppName,
-                "icon" : fs.readFileSync(AppIcon, 'base64')
-            })
-        })
-
-    })
-  }
 
   /**
-   * CCreates an object id
+   * Creates an object id
    * @method
    * @returns {Int} Returns the generated id
    */
@@ -104,15 +99,32 @@ class AVROS extends EventEmitter {
     return Math.floor(Math.random() * (+max - +min)) + +min;
   }
 
-  systemMessage(message) {
-    console.log(message)
+  systemMessage(message, type) {
+    if (isVoid(type)) {
+      type = "MSG"
+    }
+    if (type == "ERROR") {
+      console.log("Error: "+ message)
+    }
+    if (type == "MSG") {
+      console.log(message)
+    }
+    if (type == "WARNING") {
+      console.log("Warn: "+ message)
+    }
   }
 }
 
 Object.assign(AVROS.prototype, require("./core/CreateObject"))
 Object.assign(AVROS.prototype, require("./core/ObjectManagement"))
 Object.assign(AVROS.prototype, require("./core/SocketRationalization"))
+Object.assign(AVROS.prototype, require("./core/AppInformation"))
 Object.assign(AVROS.prototype, require("./database/ObjectDatabase"))
+
+
+
+
+
 
 
 module.exports = AVROS
