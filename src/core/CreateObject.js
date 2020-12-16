@@ -15,13 +15,14 @@ module.exports = {
     * @param {Object} params - description object
  */
   "SpawnAsInterest": function(player, object) {
+    var t1 = new Transform(this.players[player].head.position, this.players[player].head.rotation);
+    var vec = t1.transformPosition(new Vector3(0,0,0.5))
+
+    object.position = vec
+    object.rotation = this.players[player].head.rotation
+
     var obj = this.Construct(object)
-
-    obj.posX = this.players[player].rightController.position.x
-    obj.posY = this.players[player].rightController.position.y
-    obj.posZ = this.players[player].rightController.position.z
-
-    this.UpdateObject(obj)
+    this.DescribeObject(obj, player)
   },
 
   /**
@@ -81,6 +82,86 @@ module.exports = {
     } else {
       _obj.type = object.type
     }
+
+    if (isVoid(object.name)) {
+      _obj.name = ""
+    } else {
+      _obj.type = object.name
+    }
+
+    if (!isVoid(object.scale)) {
+      _obj.scaleX = object.scale.x + ""
+      _obj.scaleY = object.scale.y + ""
+      _obj.scaleZ = object.scale.z + ""
+    } else {
+      if (isVoid(object.scaleX)) {
+        _obj.scaleX = "1"
+      } else {
+        _obj.scaleX = object.scaleX
+      }
+      if (isVoid(object.scaleY)) {
+        _obj.scaleY = "1"
+      } else {
+        _obj.scaleY = object.scaleY
+      }
+      if (isVoid(object.scaleZ)) {
+        _obj.scaleZ = "1"
+      } else {
+        _obj.scaleZ = object.scaleZ
+      }
+    }
+
+        if (!isVoid(object.position)) {
+          _obj.posX = object.position.x + ""
+          _obj.posY = object.position.y + ""
+          _obj.posZ = object.position.z + ""
+        } else {
+          if (isVoid(object.posX)) {
+            _obj.posX = "0"
+          } else {
+            _obj.posX = object.posX + ""
+          }
+          if (isVoid(object.posY)) {
+            _obj.posY = "0"
+          } else {
+            _obj.posY = object.posY + ""
+          }
+          if (isVoid(object.posZ)) {
+            _obj.posZ = "0"
+          } else {
+            _obj.posZ = object.posZ + ""
+          }
+        }
+
+            if (!isVoid(object.rotation)) {
+              _obj.rotX = object.rotation.x + ""
+              _obj.rotY = object.rotation.y + ""
+              _obj.rotZ = object.rotation.z + ""
+              _obj.rotW = object.rotation.w + ""
+            } else {
+              if (isVoid(object.rotX)) {
+                _obj.rotX = "0"
+              } else {
+                _obj.rotX = object.rotX + ""
+              }
+              if (isVoid(object.rotY)) {
+                _obj.rotY = "0"
+              } else {
+                _obj.rotY = object.rotY + ""
+              }
+              if (isVoid(object.rotZ)) {
+                _obj.rotZ = "0"
+              } else {
+                _obj.rotZ = object.rotZ + ""
+              }
+              if (isVoid(object.rotW)) {
+                _obj.rotW = "0"
+              } else {
+                _obj.rotW = object.rotW + ""
+              }
+            }
+
+
 
 
     return _obj

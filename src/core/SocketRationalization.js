@@ -8,12 +8,12 @@
 module.exports = {
   "InitSocket": function(socket) {
     var self = this
-    this.systemMessage("server: connection detected")
+    this.systemMessage("Connection detected", "MSG")
 
     socket.inited = false
     socket.on("syncronization event", function(data) {
       if (isVoid(data)) {
-        self.SystemMessage("server: bad client dsconnected")
+        self.SystemMessage("Bad client dsconnected", "WARNING")
         socket.disconnect()
         return
       }
@@ -33,20 +33,20 @@ module.exports = {
     })
 
     socket.on("object changed", function(data) {
-      self.UpdateObject(socket, data)
+      self.ObjectUpdateEvent(data, socket.playerName)
     })
 
     socket.on("object registered", function(data) {
-      self.changeObject(socket, data)
+      self.systemMessage("Object registered event deoricated", "WARNING")
+      //self.changeObject(socket, data)
     })
 
-    this.systemMessage("server: who are you")
     socket.emit("who are you")
     socket.on("i am", function(data) {
       socket.playerName = data["playerName"]
       socket.emit("connection accepted")
       socket.emit("syncronization event callback")
-      self.systemMessage(data["playerName"] + " identified")
+      //self.systemMessage(data["playerName"] + " identified")
 
     })
 
@@ -85,7 +85,7 @@ module.exports = {
       player.head.object_id = this.generateId()
       player.objects = []
 
-      self.systemMessage("server: " + name + " connected")
+      self.systemMessage("" + name + " connected")
       firstConnect = true
     } else {
       player.objects = this.players[name].objects
@@ -105,7 +105,7 @@ module.exports = {
        * @event player entered
        * @property {string}  - Player name
        */
-      self.emit('player entered', name);
+      self.emit('player enter', name);
 
       //TODO: Spawn environment
     }
@@ -113,7 +113,7 @@ module.exports = {
 
   "ParseSyncData": function(data) {
     if (isVoid(data)) {
-      this.systemMessage("server: sync data is void")
+      this.systemMessage("Sync data is void", "ERROR")
       return
     }
     var parse = data.split("|")
@@ -169,5 +169,28 @@ module.exports = {
     user.leftController.grabberId = parse[7]
 
     return user
+  },
+
+
+  /**
+   * Select player specific socket
+   *
+   * @method
+   * @param {String} playerName - player name
+   * @return {Object} socket.IO component -  of the connected player
+   */
+  "GetPlayerSocket": function(playerName) {
+    var self = this
+    var sockets = this.io.sockets.clients()
+
+    var keys = Object.keys(sockets["sockets"])
+    for (var i = 0; i < keys.length; i++) {
+      if (sockets.sockets[keys[i]].playerName == playerName) {
+        if (isVoid(sockets.sockets[keys[i]])) {
+          self.systemMessage("player " + playerName + " doesnt have a socket", "WARNING")
+        }
+        return sockets.sockets[keys[i]]
+      }
+    }
   }
 }

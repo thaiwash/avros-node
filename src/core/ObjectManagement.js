@@ -3,21 +3,18 @@
  **/
 module.exports = {
   /**
-   * Update object
+   * Describe object to unity instance
    * @method
    * @param {Object} Object - Object to update
    * @param {String} PlayerName - Updated player's name. Required if instance sharing is disabled
    */
-  "UpdateObject": function(data, player) {
+  "DescribeObject": function(data, player) {
     if (isVoid(player) && !this.instanceSharing) {
       this.systemMessage("Player identity required for unsared instances", "ERROR")
       return
     }
 
 
-    if (data.name.search("Controller") == -1 && data.name.search("Camera") == -1) {
-      this.systemMessage("server " + player + " registered object " + data.name + " " + data.object_id)
-    }
 
 
     //data.syncTime = (new Date()).getTime()
@@ -25,18 +22,25 @@ module.exports = {
 
 
     if (!this.instanceSharing) {
-      if (isVoid(this.players[player].socket)) {
+      if (isVoid(this.players[player])) {
+        this.systemMessage("Player list disintegrity " + player, "ERROR")
+        console.log(this.players)
+        return
+      }
+      var socket = this.GetPlayerSocket(player)
+      if (isVoid(socket)) {
         this.systemMessage("Player socket disintegrity " + player, "ERROR")
         return
       }
-      data.owner = player
+      this.systemMessage(player + ": Spawn object", "NOTICE")
+      this.systemMessage(JSON.stringify(data), "NOTICE")
       this.emit("object changed", data)
-      this.players[player].socket.emit("object changed", data)
+      socket.emit("object description", data)
     } else {
       // multiplayer
       // todo: broadcast to all players within a range
       this.emit("object changed", data)
-      this.io.broadcast.emit("object changed", data)
+      this.io.broadcast.emit("object description", data)
     }
 
     /*
@@ -50,5 +54,20 @@ module.exports = {
     }
     this.players[socket.playerName].objects.push(data)
     */
+  },
+
+  /**
+   * Called whenever player changes anything
+   * @method
+   * @param {Object} data - Object to update
+   * @param {String} player - Updated player's name. Required if instance sharing is disabled
+   */
+
+  "ObjectUpdateEvent": function(data, player) {
+    this.emit("object changed", data)
+    if (this.instanceSharing) {
+      this.players[player].socket.broadcast.emit("object changed", data)
+    }
+    this.systemMessage("" + player + " changed object " + data.name + " " + data.object_id, "NOTICE")
   }
 }

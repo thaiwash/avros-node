@@ -13,6 +13,7 @@ const EventEmitter = require('events');
 var math3d = require("math3d")
 global.Vector3 = math3d.Vector3;
 global.Quaternion = math3d.Quaternion;
+global.Transform = math3d.Transform;
 
 global.isVoid = function isVoid(input) {
   if (typeof input == "undefined") {
@@ -84,7 +85,7 @@ class AVROS extends EventEmitter {
     })
 
 
-    console.log("Server: AVROS server listening on port " + port)
+    console.log("AVROS server listening on port " + port)
   }
 
 
@@ -98,28 +99,13 @@ class AVROS extends EventEmitter {
     var max = 100000;
     return Math.floor(Math.random() * (+max - +min)) + +min;
   }
-
-  systemMessage(message, type) {
-    if (isVoid(type)) {
-      type = "MSG"
-    }
-    if (type == "ERROR") {
-      console.log("Error: "+ message)
-    }
-    if (type == "MSG") {
-      console.log(message)
-    }
-    if (type == "WARNING") {
-      console.log("Warn: "+ message)
-    }
-  }
 }
 
 Object.assign(AVROS.prototype, require("./core/CreateObject"))
 Object.assign(AVROS.prototype, require("./core/ObjectManagement"))
 Object.assign(AVROS.prototype, require("./core/SocketRationalization"))
 Object.assign(AVROS.prototype, require("./core/AppInformation"))
-Object.assign(AVROS.prototype, require("./database/ObjectDatabase"))
+Object.assign(AVROS.prototype, require("./core/SystemMessage"))
 
 
 
