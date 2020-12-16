@@ -8,6 +8,7 @@
 
 
 const EventEmitter = require('events');
+global.fs = require('fs');
 
 //Object.assign(AVROS.prototype, require("./core/CreateObject"))
 var math3d = require("math3d")
