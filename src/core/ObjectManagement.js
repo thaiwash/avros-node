@@ -15,45 +15,55 @@ module.exports = {
     }
 
 
+    // convert to API interpretable form
+    var objArr = this.Construct(data)
 
 
-    //data.syncTime = (new Date()).getTime()
-    //this.RegisterObjectUpdate(player, data)
+    for (var i = 0; i < objArr.length; i ++) {
+      if (!this.instanceSharing) {
+        if (isVoid(this.players[player])) {
+          this.systemMessage("Player list disintegrity " + player, "ERROR")
+          console.log(this.players)
+          return
+        }
+        var socket = this.GetPlayerSocket(player)
+        if (isVoid(socket)) {
+          this.systemMessage("Player socket disintegrity " + player, "ERROR")
+          return
+        }
+        this.systemMessage(player + ": Spawn object", "NOTICE")
+        this.systemMessage(JSON.stringify(objArr[i]), "NOTICE")
+        this.emit("object changed", objArr[i])
+        socket.emit("object description", objArr[i])
+        this.UpdatePlayerObjectLedger(player, objArr[i])
 
-
-    if (!this.instanceSharing) {
-      if (isVoid(this.players[player])) {
-        this.systemMessage("Player list disintegrity " + player, "ERROR")
-        console.log(this.players)
-        return
+      } else {
+        // multiplayer
+        // todo: broadcast to all players within a range
+        this.emit("object changed", objArr[i])
+        this.io.broadcast.emit("object description", objArr[i])
       }
-      var socket = this.GetPlayerSocket(player)
-      if (isVoid(socket)) {
-        this.systemMessage("Player socket disintegrity " + player, "ERROR")
-        return
-      }
-      this.systemMessage(player + ": Spawn object", "NOTICE")
-      this.systemMessage(JSON.stringify(data), "NOTICE")
-      this.emit("object changed", data)
-      socket.emit("object description", data)
-    } else {
-      // multiplayer
-      // todo: broadcast to all players within a range
-      this.emit("object changed", data)
-      this.io.broadcast.emit("object description", data)
     }
 
-    /*
+  },
+
+  /**
+   * Bookkeeping
+   * @method
+   * @param {String} player - Player's name.
+   * @param {Object} data - Object to update
+   */
+  "UpdatePlayerObjectLedger": function(player, data) {
+
     // Update player spesific object ledger
-    var objs = this.players[socket.playerName].objects
+    var objs = this.players[player].objects
     for (var i = 0; i < objs.length; i++) {
       if (objs[i].object_id == data.object_id) {
         objs[i] = data
         return
       }
     }
-    this.players[socket.playerName].objects.push(data)
-    */
+    this.players[player].objects.push(data)
   },
 
   /**
