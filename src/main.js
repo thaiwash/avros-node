@@ -86,7 +86,7 @@ class AVROS extends EventEmitter {
     })
 
 
-    console.log("AVROS server listening on port " + port)
+    console.log("AVROS sub application with address localhost:" + port)
   }
 
 
@@ -98,7 +98,7 @@ class AVROS extends EventEmitter {
   generateId() {
     var min = 1;
     var max = 100000;
-    return Math.floor(Math.random() * (+max - +min)) + +min;
+    return (Math.floor(Math.random() * (+max - +min)) + +min);
   }
 }
 

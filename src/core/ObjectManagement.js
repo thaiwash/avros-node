@@ -16,16 +16,19 @@ module.exports = {
 
 
     // convert to API interpretable form
-    var objArr = this.Construct(data)
+    var objArr = this.RecursiveContruct(data)
 
+    console.log(objArr)
 
-    for (var i = 0; i < objArr.length; i ++) {
+    for (var i = 0; i < objArr.length; i++) {
       if (!this.instanceSharing) {
         if (isVoid(this.players[player])) {
           this.systemMessage("Player list disintegrity " + player, "ERROR")
           console.log(this.players)
           return
         }
+
+
         var socket = this.GetPlayerSocket(player)
         if (isVoid(socket)) {
           this.systemMessage("Player socket disintegrity " + player, "ERROR")
@@ -34,6 +37,7 @@ module.exports = {
         this.systemMessage(player + ": Spawn object", "NOTICE")
         this.systemMessage(JSON.stringify(objArr[i]), "NOTICE")
         this.emit("object changed", objArr[i])
+
         socket.emit("object description", objArr[i])
         this.UpdatePlayerObjectLedger(player, objArr[i])
 
@@ -44,6 +48,7 @@ module.exports = {
         this.io.broadcast.emit("object description", objArr[i])
       }
     }
+
 
   },
 
