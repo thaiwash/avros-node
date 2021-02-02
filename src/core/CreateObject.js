@@ -169,25 +169,82 @@ module.exports = {
     return _obj
   },
 
-  // this requires more thinking power than I have right now
+      /**
+       * Describe object to unity instance
+       * @method
+       * @param {Object} Object - Object to update
+       * @param {String} PlayerName - Updated player's name. Required if instance sharing is disabled
+       */
   "RecursiveContruct": function(object) {
     let _obj = this.Construct(object)
     let objects = [_obj]
     if (!isVoid(object.children)) {
       for (let i = 0; i < object.children.length; i++) {
         object.children[i].parent = _obj.object_id
-        console.log("rec")
-        console.log(object.children[i])
-        let child = this.RecursiveContruct(object.children[i]);
-        console.log(child)
+        let child = this.RecursiveContruct(object.children[i])
         objects.push(child[0])
-        console.log("both")
-        console.log(objects)
       }
     }
 
     return objects
-  }
+  },
+
+
+      /**
+       * Describe object to unity instance
+       * @method
+       * @param {Object} Object - Object to update
+       * @param {String} PlayerName - Updated player's name. Required if instance sharing is disabled
+       */
+           /**
+            * Describe object to unity instance
+            * @method
+            * @param {Object} Object - Object to update
+            * @param {String} PlayerName - Updated player's name. Required if instance sharing is disabled
+            */
+    "DescribeObject": function(data, player) {
+      if (isVoid(player) && !this.instanceSharing) {
+        this.systemMessage("Player identity required for unsared instances", "ERROR")
+        return
+      }
+
+
+      // convert to API interpretable form
+      var objArr = this.RecursiveContruct(data)
+
+      console.log(objArr)
+
+      for (var i = 0; i < objArr.length; i++) {
+        if (!this.instanceSharing) {
+          if (isVoid(this.players[player])) {
+            this.systemMessage("Player list disintegrity " + player, "ERROR")
+            console.log(this.players)
+            return
+          }
+
+
+          var socket = this.GetPlayerSocket(player)
+          if (isVoid(socket)) {
+            this.systemMessage("Player socket disintegrity " + player, "ERROR")
+            return
+          }
+          this.systemMessage(player + ": Spawn object", "NOTICE")
+          this.systemMessage(JSON.stringify(objArr[i]), "NOTICE")
+          this.emit("object changed", objArr[i])
+
+          socket.emit("object description", objArr[i])
+          this.UpdatePlayerObjectLedger(player, objArr[i])
+
+        } else {
+          // multiplayer
+          // todo: broadcast to all players within a range
+          this.emit("object changed", objArr[i])
+          this.io.broadcast.emit("object description", objArr[i])
+        }
+      }
+
+
+    }
 }
 
 

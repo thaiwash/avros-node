@@ -84,5 +84,25 @@ module.exports = {
       this.players[player].socket.broadcast.emit("object changed", data)
     }
     this.systemMessage("" + player + " changed object " + data.name + " " + data.object_id, "NOTICE")
+  },
+
+
+  /**
+   * Get all objects within the instance
+   * @method
+   * @return {Array} data - all objects
+   */
+  "AllObjects": function() {
+    var objs = []
+    var playerNames = Object.keys(this.players)
+    for (var i = 0; i < playerNames.length; i++) {
+      if (isVoid(this.players[playerNames[i]].objects)) {
+        this.players[playerNames[i]].objects = []
+      }
+      for (var i2 = 0; i2 < this.players[playerNames[i]].objects.length; i2++) {
+        objs.push(this.players[playerNames[i]].objects[i2])
+      }
+    }
+    return objs
   }
 }

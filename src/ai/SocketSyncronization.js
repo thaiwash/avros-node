@@ -46,7 +46,7 @@ module.exports = {
       socket.playerName = data["playerName"]
       socket.emit("connection accepted")
       socket.emit("syncronization event callback")
-      //self.systemMessage(data["playerName"] + " identified")
+      self.systemMessage(data["playerName"] + " sends greetings")
 
     })
 
@@ -59,6 +59,8 @@ module.exports = {
       self.systemMessage(socket.playerName + " left the server")
       delete(self.players[socket.playerName])
     })
+
+
   },
 
   "SyncEvent": function(socket, data) {

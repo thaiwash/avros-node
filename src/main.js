@@ -33,17 +33,10 @@ global.isVoid = function isVoid(input) {
 class AVROS extends EventEmitter {
   constructor() {
     super()
-
-    this.instanceSharing = false
+    this.ActivateInstanceIntegrityIntelligence()
     this.players = []
   }
 
-  /**
-   * Enables instance sharing
-   */
-  EnableMultiplayer() {
-    this.instanceSharing = true
-  }
 
   /**
    * Opens a socket port for an AVROS application
@@ -104,9 +97,11 @@ class AVROS extends EventEmitter {
 
 Object.assign(AVROS.prototype, require("./core/CreateObject"))
 Object.assign(AVROS.prototype, require("./core/ObjectManagement"))
-Object.assign(AVROS.prototype, require("./core/SocketRationalization"))
+Object.assign(AVROS.prototype, require("./ai/SocketSyncronization"))
+Object.assign(AVROS.prototype, require("./ai/InstanceRationalization"))
 Object.assign(AVROS.prototype, require("./core/AppInformation"))
 Object.assign(AVROS.prototype, require("./core/SystemMessage"))
+Object.assign(AVROS.prototype, require("./database/JSONDatabase"))
 
 
 
