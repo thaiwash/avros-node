@@ -16,21 +16,22 @@ async function getFiles(dir) {
   }));
   return Array.prototype.concat(...files);
 }
+
 getFiles("src").then(function(out) {
   for(var i = 0; i < out.length; i ++) {
     var data = fs.readFileSync(out[i], 'utf8');
     console.log("beautified " + data.length + " " + out[i])
     fs.writeFileSync(out[i], beautify(data, { indent_size: 2, space_in_empty_paren: true }))
-    /*
-   var data = fs.readFileSync(out[i], 'utf8', function (err, data) {
-       console.log(" beautified "+data.length)
-       if (err) {
-           throw err;
-       }
-       fs.writeFileSync(out[i], beautify(data, { indent_size: 2, space_in_empty_paren: true }));
-   });
-   */
   }
+
+
+  getFiles("skills").then(function(out) {
+    for(var i = 0; i < out.length; i ++) {
+      var data = fs.readFileSync(out[i], 'utf8');
+      console.log("beautified " + data.length + " " + out[i])
+      fs.writeFileSync(out[i], beautify(data, { indent_size: 2, space_in_empty_paren: true }))
+    }
+  })
 })
 /*fs.readdirSync("src").forEach(file => {
   console.log(file);

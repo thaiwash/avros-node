@@ -47,15 +47,7 @@ module.exports = {
     }
   },
 
-  /**
-   * Constructs an object definition
-   * @method
-   * @param {Object} params - description object
-
-   * @object
-   * @param {Object} params - description object
-  */
-  "Construct": function(object) {
+  "_construct": function(object) {
     var _obj = {}
     if (!isVoid(object.id)) {
       _obj.object_id = parseInt(object.id) + ""
@@ -135,10 +127,18 @@ module.exports = {
     }
 
     if (!isVoid(object.rotation)) {
-      _obj.rotX = object.rotation.x + ""
-      _obj.rotY = object.rotation.y + ""
-      _obj.rotZ = object.rotation.z + ""
-      _obj.rotW = object.rotation.w + ""
+      if (!isVoid(object.rotation.w)){
+        _obj.rotX = object.rotation.x + ""
+        _obj.rotY = object.rotation.y + ""
+        _obj.rotZ = object.rotation.z + ""
+        _obj.rotW = object.rotation.w + ""
+      } else {
+        var q = Quaternion.Euler(parseInt(object.rotation.x), parseInt(object.rotation.y), parseInt(object.rotation.z))
+          _obj.rotX = q.x + ""
+          _obj.rotY = q.y + ""
+          _obj.rotZ = q.z + ""
+          _obj.rotW = q.w + ""
+      }
     } else {
       if (isVoid(object.rotX)) {
         _obj.rotX = "0"
@@ -169,19 +169,20 @@ module.exports = {
     return _obj
   },
 
-      /**
-       * Describe object to unity instance
-       * @method
-       * @param {Object} Object - Object to update
-       * @param {String} PlayerName - Updated player's name. Required if instance sharing is disabled
-       */
-  "RecursiveContruct": function(object) {
-    let _obj = this.Construct(object)
+  /**
+   * Constructs an object so that it can be sent to the uninty server
+
+   * @method
+   * @param {Object} Object - Object to update
+   * @return {Array} ArrayObject - An object array with constructed objects
+   */
+  "Construct": function(object) {
+    let _obj = this._construct(object)
     let objects = [_obj]
     if (!isVoid(object.children)) {
       for (let i = 0; i < object.children.length; i++) {
         object.children[i].parent = _obj.object_id
-        let child = this.RecursiveContruct(object.children[i])
+        let child = this.Construct(object.children[i])
         objects.push(child[0])
       }
     }
@@ -190,61 +191,55 @@ module.exports = {
   },
 
 
-      /**
-       * Describe object to unity instance
-       * @method
-       * @param {Object} Object - Object to update
-       * @param {String} PlayerName - Updated player's name. Required if instance sharing is disabled
-       */
-           /**
-            * Describe object to unity instance
-            * @method
-            * @param {Object} Object - Object to update
-            * @param {String} PlayerName - Updated player's name. Required if instance sharing is disabled
-            */
-    "DescribeObject": function(data, player) {
-      if (isVoid(player) && !this.instanceSharing) {
-        this.systemMessage("Player identity required for unsared instances", "ERROR")
-        return
-      }
-
-
-      // convert to API interpretable form
-      var objArr = this.RecursiveContruct(data)
-
-      console.log(objArr)
-
-      for (var i = 0; i < objArr.length; i++) {
-        if (!this.instanceSharing) {
-          if (isVoid(this.players[player])) {
-            this.systemMessage("Player list disintegrity " + player, "ERROR")
-            console.log(this.players)
-            return
-          }
-
-
-          var socket = this.GetPlayerSocket(player)
-          if (isVoid(socket)) {
-            this.systemMessage("Player socket disintegrity " + player, "ERROR")
-            return
-          }
-          this.systemMessage(player + ": Spawn object", "NOTICE")
-          this.systemMessage(JSON.stringify(objArr[i]), "NOTICE")
-          this.emit("object changed", objArr[i])
-
-          socket.emit("object description", objArr[i])
-          this.UpdatePlayerObjectLedger(player, objArr[i])
-
-        } else {
-          // multiplayer
-          // todo: broadcast to all players within a range
-          this.emit("object changed", objArr[i])
-          this.io.broadcast.emit("object description", objArr[i])
-        }
-      }
-
-
+  /**
+   * Describe object to unity instance
+   * @method
+   * @param {Object} Object - Object to update
+   * @param {String} PlayerName - Updated player's name. Required if instance sharing is disabled
+   */
+  "DescribeObject": function(data, player) {
+    if (isVoid(player) && !this.instanceSharing) {
+      this.systemMessage("Player identity required for unsared instances", "ERROR")
+      return
     }
+
+
+    // convert to API interpretable form
+    var objArr = this.Construct(data)
+
+    console.log(objArr)
+
+    for (var i = 0; i < objArr.length; i++) {
+      if (!this.instanceSharing) {
+        if (isVoid(this.players[player])) {
+          this.systemMessage("Player list disintegrity " + player, "ERROR")
+          console.log(this.players)
+          return
+        }
+
+
+        var socket = this.GetPlayerSocket(player)
+        if (isVoid(socket)) {
+          this.systemMessage("Player socket disintegrity " + player, "ERROR")
+          return
+        }
+        this.systemMessage(player + ": Spawn object", "NOTICE")
+        this.systemMessage(JSON.stringify(objArr[i]), "NOTICE")
+        this.emit("object changed", objArr[i])
+
+        socket.emit("object description", objArr[i])
+        this.UpdatePlayerObjectLedger(player, objArr[i])
+
+      } else {
+        // multiplayer
+        // todo: broadcast to all players within a range
+        this.emit("object changed", objArr[i])
+        this.io.broadcast.emit("object description", objArr[i])
+      }
+    }
+
+
+  }
 }
 
 

@@ -101,7 +101,7 @@ Object.assign(AVROS.prototype, require("./ai/SocketSyncronization"))
 Object.assign(AVROS.prototype, require("./ai/InstanceRationalization"))
 Object.assign(AVROS.prototype, require("./core/AppInformation"))
 Object.assign(AVROS.prototype, require("./core/SystemMessage"))
-Object.assign(AVROS.prototype, require("./database/JSONDatabase"))
+Object.assign(AVROS.prototype, require("./texture/DrawCanvas"))
 
 
 

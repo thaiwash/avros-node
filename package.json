@@ -1,6 +1,6 @@
 {
   "name": "avros",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "AROS 3D WebApp wrapper",
   "main": "src/main.js",
   "scripts": {
@@ -23,7 +23,7 @@
   "homepage": "https://github.com/thaiwash/avros-node#readme",
   "dependencies": {
     "async-waterfall": "^0.1.5",
-    "canvas": "^2.6.0",
+    "canvas": "^2.6.1",
     "express": "^4.17.1",
     "js-beautify": "^1.13.0",
     "math3d": "^0.2.2",
