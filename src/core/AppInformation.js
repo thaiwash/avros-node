@@ -9,7 +9,7 @@ var defaultIcon = 'iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAAABmJLR0QA/wD/A
 module.exports = {
   /**
    * Application name and icon for avros menu
-   * @param {Number} AppName - Application name
+   * @param {String} AppName - Application name
    * @param {Number} AppIcon - Application icon
    */
   "AppInformation": function(AppName, AppIcon) {

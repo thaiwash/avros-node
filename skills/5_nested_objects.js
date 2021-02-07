@@ -5,22 +5,27 @@ instance.AppInformation("Tester")
 
 // Example cube
 var cube = {
-  "type": "cube",
-  "scale": {
-    "x": "0.1",
-    "y": "0.1",
-    "z": "0.1"
-  },
+  "type": "empty",
   "children": [{
-    "type": "plane",
+    "type": "cube",
     "scale": {
-      "x": "0.01",
-      "y": "0.01",
-      "z": "0.01"
-    }
+      "x": "0.1",
+      "y": "0.1",
+      "z": "0.1"
+    },
+    "children": [{
+      "type": "plane",
+      "scale": {
+        "x": "0.01",
+        "y": "0.01",
+        "z": "0.01"
+      }
+    }]
   }]
 }
+
 instance.on("player enter", function(player) {
   console.log("Player " + player + " entered")
-  instance.SpawnAsInterest(player, cube)
+  //instance.SpawnAsInterest(player, cube)
+  instance.Construct(cube)
 })

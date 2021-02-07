@@ -9,7 +9,7 @@ module.exports = {
    */
   "SetTexture": function(textureId, canvas) {
     this.io.sockets.emit("set texture", {
-      "object_id": textureId+"",
+      "object_id": textureId + "",
       // the header needs to be stripped from this base64 encoded data string
       "texture": canvas.toDataURL().substr("data:image/png;base64,".length)
     })

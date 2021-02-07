@@ -52,7 +52,7 @@ module.exports = {
     if (!isVoid(object.id)) {
       _obj.object_id = parseInt(object.id) + ""
     } else {
-      _obj.object_id = generateId()
+      _obj.object_id = this.GenerateId() + ""
     }
 
 
@@ -61,12 +61,12 @@ module.exports = {
     }
 
     if (isVoid(_obj.object_id)) {
-      _obj.object_id = generateId()
+      _obj.object_id = this.GenerateId() + ""
     }
 
     if (_obj.object_id.length == 0) {
       console.warn("Refacturing ID complications")
-      _obj.object_id = generateId()
+      _obj.object_id = this.GenerateId() + ""
     }
 
 
@@ -127,17 +127,17 @@ module.exports = {
     }
 
     if (!isVoid(object.rotation)) {
-      if (!isVoid(object.rotation.w)){
+      if (!isVoid(object.rotation.w)) {
         _obj.rotX = object.rotation.x + ""
         _obj.rotY = object.rotation.y + ""
         _obj.rotZ = object.rotation.z + ""
         _obj.rotW = object.rotation.w + ""
       } else {
         var q = Quaternion.Euler(parseInt(object.rotation.x), parseInt(object.rotation.y), parseInt(object.rotation.z))
-          _obj.rotX = q.x + ""
-          _obj.rotY = q.y + ""
-          _obj.rotZ = q.z + ""
-          _obj.rotW = q.w + ""
+        _obj.rotX = q.x + ""
+        _obj.rotY = q.y + ""
+        _obj.rotZ = q.z + ""
+        _obj.rotW = q.w + ""
       }
     } else {
       if (isVoid(object.rotX)) {
@@ -166,6 +166,10 @@ module.exports = {
       _obj.parent = object.parent + ""
     }
 
+    if (!isVoid(object.children)) {
+      _obj.children = object.children
+    }
+
     return _obj
   },
 
@@ -176,18 +180,42 @@ module.exports = {
    * @param {Object} Object - Object to update
    * @return {Array} ArrayObject - An object array with constructed objects
    */
-  "Construct": function(object) {
-    let _obj = this._construct(object)
-    let objects = [_obj]
-    if (!isVoid(object.children)) {
-      for (let i = 0; i < object.children.length; i++) {
-        object.children[i].parent = _obj.object_id
-        let child = this.Construct(object.children[i])
-        objects.push(child[0])
+  "Construct": function(obj) {
+    this._constructuonRecursion(obj)
+    var ret = global.collection
+    global.collection = undefined
+    for (let i = 0; i < ret.length; i++) {
+      if (ret[i].children) {
+        delete ret[i].children
+      }
+    }
+    ret = this.clean(ret)
+    console.log(ret)
+    return ret
+  },
+
+  "clean": function(obj) {
+    for (var propName in obj) {
+      if (obj[propName] === null || obj[propName] === undefined) {
+        delete obj[propName];
+      }
+    }
+    return obj
+  },
+
+  "_constructuonRecursion": function(obj) {
+    obj = this._construct(obj)
+    if (!isVoid(obj.children)) {
+      for (let i = 0; i < obj.children.length; i++) {
+        obj.children[i].parent = obj.object_id
+        this._constructuonRecursion(obj.children[i])
       }
     }
 
-    return objects
+    if (isVoid(global.collection)) {
+      global.collection = []
+    }
+    global.collection.push(obj)
   },
 
 
@@ -240,12 +268,4 @@ module.exports = {
 
 
   }
-}
-
-
-
-function generateId() {
-  var min = 1;
-  var max = 100000;
-  return Math.floor(Math.random() * (+max - +min)) + +min;
 }

@@ -89,5 +89,17 @@ module.exports = {
       "object_id": object_id + "",
       "tag": tag
     })
+  },
+
+
+  /**
+   * Creates an object id
+   * @method
+   * @returns {Int} Returns the generated id
+   */
+  "GenerateId": function() {
+    var min = 1
+    var max = 100000
+    return (Math.floor(Math.random() * (+max - +min)) + min);
   }
 }

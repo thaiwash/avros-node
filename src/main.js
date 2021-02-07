@@ -83,16 +83,6 @@ class AVROS extends EventEmitter {
   }
 
 
-  /**
-   * Creates an object id
-   * @method
-   * @returns {Int} Returns the generated id
-   */
-  generateId() {
-    var min = 1;
-    var max = 100000;
-    return (Math.floor(Math.random() * (+max - +min)) + +min);
-  }
 }
 
 Object.assign(AVROS.prototype, require("./core/CreateObject"))
@@ -101,6 +91,7 @@ Object.assign(AVROS.prototype, require("./ai/SocketSyncronization"))
 Object.assign(AVROS.prototype, require("./ai/InstanceRationalization"))
 Object.assign(AVROS.prototype, require("./core/AppInformation"))
 Object.assign(AVROS.prototype, require("./core/SystemMessage"))
+Object.assign(AVROS.prototype, require("./database/JSONDatabase"))
 Object.assign(AVROS.prototype, require("./texture/DrawCanvas"))
 
 

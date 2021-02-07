@@ -1,0 +1,3 @@
+Found bugs:
+- Generated id is not a string
+- generateId not accessable from instance

@@ -8,7 +8,7 @@ var AVROS = require("../src/main.js")
 var instance = new AVROS()
 instance.Serve(9447)
 instance.AppInformation("Tester")
-instance.ActivateJSONDatabase("res/db_file.json")
+instance.ActivateJSONDatabase("../research/db_file.json")
 
 var cube = {
   "type": "cube",

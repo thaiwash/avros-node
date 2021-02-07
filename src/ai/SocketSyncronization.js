@@ -82,9 +82,9 @@ module.exports = {
 
       socket.playerName = name
 
-      player.leftController.object_id = this.generateId()
-      player.rightController.object_id = this.generateId()
-      player.head.object_id = this.generateId()
+      player.leftController.object_id = this.GenerateId()
+      player.rightController.object_id = this.GenerateId()
+      player.head.object_id = this.GenerateId()
       player.objects = []
 
       self.systemMessage("" + name + " connected")
