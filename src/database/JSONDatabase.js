@@ -18,9 +18,9 @@ module.exports = {
   "LoadState": function() {
     var saveFile = process.cwd() + "/" + this.saveFile
 
-        if (!fs.existsSync(saveFile)) {
-          this.saveState()
-        }
+    if (!fs.existsSync(saveFile)) {
+      this.saveState()
+    }
     try {
       var saveData = JSON.parse(fs.readFileSync(saveFile).toString())
     } catch (e) {
@@ -47,7 +47,7 @@ module.exports = {
 
   "ReconstructState": function(data) {
     this.players = []
-    for (var i = 0; i < data.players.name.length; i ++) {
+    for (var i = 0; i < data.players.name.length; i++) {
       this.players[data.players.name[i]] = {}
 
       this.players[data.players.name[i]].head = {}
@@ -152,8 +152,6 @@ module.exports = {
   "SaveState": function() {
     var saveFile = process.cwd() + "/" + this.saveFile
     var _players = this.DeconstructState()
-    console.log(_players)
-    console.log(JSON.stringify(_players))
     var saveData = {
       players: _players
     }

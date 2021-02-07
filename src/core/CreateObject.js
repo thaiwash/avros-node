@@ -190,8 +190,7 @@ module.exports = {
       }
     }
     ret = this.clean(ret)
-    console.log(ret)
-    return ret
+    return ret.reverse()
   },
 
   "clean": function(obj) {
@@ -235,7 +234,7 @@ module.exports = {
     // convert to API interpretable form
     var objArr = this.Construct(data)
 
-    console.log(objArr)
+    //console.log(objArr)
 
     for (var i = 0; i < objArr.length; i++) {
       if (!this.instanceSharing) {

@@ -3,8 +3,8 @@ var instance = new AVROS()
 instance.Serve(9447)
 instance.AppInformation("Tester")
 
-var cubeId = instance.generateId()
-var planeId = instance.generateId()
+var cubeId = instance.GenerateId()
+var planeId = instance.GenerateId()
 
 // Example cube
 var cube = {
