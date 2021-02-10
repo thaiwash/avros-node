@@ -173,25 +173,25 @@ module.exports = {
     return _obj
   },
 
-  /**
-   * Constructs an object so that it can be sent to the uninty server
+    /**
+     * Constructs an object so that it can be sent to the uninty server
 
-   * @method
-   * @param {Object} Object - Object to update
-   * @return {Array} ArrayObject - An object array with constructed objects
-   */
-  "Construct": function(obj) {
-    this._constructuonRecursion(obj)
-    var ret = global.collection
-    global.collection = undefined
-    for (let i = 0; i < ret.length; i++) {
-      if (ret[i].children) {
-        delete ret[i].children
+     * @method
+     * @param {Object} Object - Object to update
+     * @return {Array} ArrayObject - An object array with constructed objects
+     */
+    "Construct": function(obj) {
+      this._constructuonRecursion(obj)
+      var ret = global.collection
+      global.collection = undefined
+      for (let i = 0; i < ret.length; i++) {
+        if (ret[i].children) {
+          delete ret[i].children
+        }
       }
-    }
-    ret = this.clean(ret)
-    return ret.reverse()
-  },
+      ret = this.clean(ret)
+      return ret.reverse()
+    },
 
   "clean": function(obj) {
     for (var propName in obj) {
@@ -267,4 +267,6 @@ module.exports = {
 
 
   }
+
+
 }

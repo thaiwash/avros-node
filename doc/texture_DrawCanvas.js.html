@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Source: database/MongoDatabase.js</title>
+    <title>JSDoc: Source: texture/DrawCanvas.js</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Source: database/MongoDatabase.js</h1>
+    <h1 class="page-title">Source: texture/DrawCanvas.js</h1>
 
     
 
@@ -26,53 +26,21 @@
     
     <section>
         <article>
-            <pre class="prettyprint source linenums"><code>/**
- * @author Taivas Gogoljuk
- **/
-
-
-module.exports = {
+            <pre class="prettyprint source linenums"><code>module.exports = {
   /**
-   * Activates mongo database with credential configurations
+   * Drawing tools.
+   This function converts a canvas object to a unity plane texture
 
-   Example: {
-     "username": "solaris",
-     "password": "s5RLSGfRPQ9zYmB",
-     "address":"cluster0.ygien.mongodb.net",
-     "dbname": "solarfactory"
-   }
-
-
-   * @method
-   * @param {Object} config - Connection configurations
+   * @method - SetTexture
+   * @param {Int} textureId - an object id for a plane
+   * @param {Object} canvas - this is a canvas object creeted by the node extension called canvas
    */
-  "ActivateMongoDB": function(mongodb) {
-    this.MongoClient = require('mongodb').MongoClient;
-    var uri = "mongodb+srv://" + mongodb.username + ":" + mongodb.password +
-      "@" + mongodb.url + "/" + mongodb.db + "?retryWrites=true&amp;w=majority";
-    this.dbClient = new MongoClient(uri, {
-      useNewUrlParser: true
-    });
-  },
-
-
-  /**
-    * Register and update object. Uses mongodb to track object positions,
-    scale, rotation, last update, owner if necessairy.
-
-    This can be done without a database, but it is arguable weather or not it should.
-
-    * @method
-    * @param {String} playerName - is allso the player id
-    * @param {Object} object - GameObject and all its attributes
-    */
-  "RegisterObjectUpdate": function(playerName, obj) {
-    if (!isVoid(this.dbClient)) {
-      console.log("object to update:")
-      console.log(obj)
-    } else {
-      console.error("no database connection")
-    }
+  "SetTexture": function(textureId, canvas) {
+    this.io.sockets.emit("set texture", {
+      "object_id": textureId + "",
+      // the header needs to be stripped from this base64 encoded data string
+      "texture": canvas.toDataURL().substr("data:image/png;base64,".length)
+    })
   }
 }</code></pre>
         </article>

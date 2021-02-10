@@ -34,6 +34,7 @@ module.exports = {
     if (this.instanceSharing) {
       this.players[player].socket.broadcast.emit("object changed", data)
     }
+    this.UpdatePlayerObjectLedger(player, data)
     this.systemMessage("" + player + " changed object " + data.name + " " + data.object_id, "NOTICE")
   },
 
@@ -90,6 +91,42 @@ module.exports = {
       "tag": tag
     })
   },
+
+  /**
+   * Get object by id
+
+   * @method
+   * @param {Int} object_id - Object id
+   * @returns {Object} - Object
+   */
+
+   "GetObjectById": function(objectId) {
+     var objs = this.AllObjects()
+     for (var i = 0; i < objs.length; i ++) {
+       if (objs[i].object_id == objectId) {
+         return objs[i]
+       }
+     }
+   },
+
+   /**
+    * Get children
+
+    * @method
+    * @param {Object} object - Constructed object
+    * @returns {Array} - Object array
+    */
+
+    "GetChildren": function(object) {
+      var objs = this.AllObjects()
+      var ret = []
+      for (var i = 0; i < objs.length; i ++) {
+        if (objs[i].parent == object.object_id) {
+          ret.push(objs[i])
+        }
+      }
+      return ret
+    },
 
 
   /**

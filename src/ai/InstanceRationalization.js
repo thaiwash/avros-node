@@ -3,6 +3,7 @@ module.exports = {
 
   "ActivateInstanceIntegrityIntelligence": function() {
     var self = this
+    this.requiredTasks = []
     this.rationalizationInterval = setInterval(function() {
       self.RationalizeObjects()
     }, 3000)
@@ -25,7 +26,7 @@ module.exports = {
 
         // check if object belongs to a disconnected player
         if (!isVoid(this.players[playerNames[i]].objects[i2].owner)) {
-          if (isVoid(this.getPlayerSocket(obj.owner))) {
+          if (isVoid(this.GetPlayerSocket(obj.owner))) {
             this.systemMessage("server: player " + playerNames[i] + " is disconnected. " + obj.name + " will be deleted")
             //this.getPlayerSocket(playerNames[i]).emit("object destroyed", obj)
 
@@ -80,7 +81,7 @@ module.exports = {
             }
             if (!found) {
               this.systemMessage("player " + playerNames[i3] + " is missing object " + obj.name)
-              if (isVoid(this.getPlayerSocket(playerNames[i3]))) {
+              if (isVoid(this.GetPlayerSocket(playerNames[i3]))) {
                 this.systemMessage("warning: player " + playerNames[i3] + " is missing a socket")
               }
               this.systemMessage(obj)

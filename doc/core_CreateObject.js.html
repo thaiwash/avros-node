@@ -75,20 +75,12 @@ module.exports = {
     }
   },
 
-  /**
-   * Constructs an object definition
-   * @method
-   * @param {Object} params - description object
-
-   * @object
-   * @param {Object} params - description object
-  */
-  "Construct": function(object) {
+  "_construct": function(object) {
     var _obj = {}
     if (!isVoid(object.id)) {
       _obj.object_id = parseInt(object.id) + ""
     } else {
-      _obj.object_id = generateId()
+      _obj.object_id = this.GenerateId() + ""
     }
 
 
@@ -97,12 +89,12 @@ module.exports = {
     }
 
     if (isVoid(_obj.object_id)) {
-      _obj.object_id = generateId()
+      _obj.object_id = this.GenerateId() + ""
     }
 
     if (_obj.object_id.length == 0) {
       console.warn("Refacturing ID complications")
-      _obj.object_id = generateId()
+      _obj.object_id = this.GenerateId() + ""
     }
 
 
@@ -163,10 +155,18 @@ module.exports = {
     }
 
     if (!isVoid(object.rotation)) {
-      _obj.rotX = object.rotation.x + ""
-      _obj.rotY = object.rotation.y + ""
-      _obj.rotZ = object.rotation.z + ""
-      _obj.rotW = object.rotation.w + ""
+      if (!isVoid(object.rotation.w)) {
+        _obj.rotX = object.rotation.x + ""
+        _obj.rotY = object.rotation.y + ""
+        _obj.rotZ = object.rotation.z + ""
+        _obj.rotW = object.rotation.w + ""
+      } else {
+        var q = Quaternion.Euler(parseInt(object.rotation.x), parseInt(object.rotation.y), parseInt(object.rotation.z))
+        _obj.rotX = q.x + ""
+        _obj.rotY = q.y + ""
+        _obj.rotZ = q.z + ""
+        _obj.rotW = q.w + ""
+      }
     } else {
       if (isVoid(object.rotX)) {
         _obj.rotX = "0"
@@ -194,37 +194,111 @@ module.exports = {
       _obj.parent = object.parent + ""
     }
 
+    if (!isVoid(object.children)) {
+      _obj.children = object.children
+    }
+
     return _obj
   },
 
-  // this requires more thinking power than I have right now
-  "RecursiveContruct": function(object) {
-    let _obj = this.Construct(object)
-    let objects = [_obj]
-    if (!isVoid(object.children)) {
-      for (let i = 0; i &lt; object.children.length; i++) {
-        object.children[i].parent = _obj.object_id
-        console.log("rec")
-        console.log(object.children[i])
-        let child = this.RecursiveContruct(object.children[i]);
-        console.log(child)
-        objects.push(child[0])
-        console.log("both")
-        console.log(objects)
+    /**
+     * Constructs an object so that it can be sent to the uninty server
+
+     * @method
+     * @param {Object} Object - Object to update
+     * @return {Array} ArrayObject - An object array with constructed objects
+     */
+    "Construct": function(obj) {
+      this._constructuonRecursion(obj)
+      var ret = global.collection
+      global.collection = undefined
+      for (let i = 0; i &lt; ret.length; i++) {
+        if (ret[i].children) {
+          delete ret[i].children
+        }
+      }
+      ret = this.clean(ret)
+      return ret.reverse()
+    },
+
+  "clean": function(obj) {
+    for (var propName in obj) {
+      if (obj[propName] === null || obj[propName] === undefined) {
+        delete obj[propName];
+      }
+    }
+    return obj
+  },
+
+  "_constructuonRecursion": function(obj) {
+    obj = this._construct(obj)
+    if (!isVoid(obj.children)) {
+      for (let i = 0; i &lt; obj.children.length; i++) {
+        obj.children[i].parent = obj.object_id
+        this._constructuonRecursion(obj.children[i])
       }
     }
 
-    return objects
+    if (isVoid(global.collection)) {
+      global.collection = []
+    }
+    global.collection.push(obj)
+  },
+
+
+  /**
+   * Describe object to unity instance
+   * @method
+   * @param {Object} Object - Object to update
+   * @param {String} PlayerName - Updated player's name. Required if instance sharing is disabled
+   */
+  "DescribeObject": function(data, player) {
+    if (isVoid(player) &amp;&amp; !this.instanceSharing) {
+      this.systemMessage("Player identity required for unsared instances", "ERROR")
+      return
+    }
+
+
+    // convert to API interpretable form
+    var objArr = this.Construct(data)
+
+    //console.log(objArr)
+
+    for (var i = 0; i &lt; objArr.length; i++) {
+      if (!this.instanceSharing) {
+        if (isVoid(this.players[player])) {
+          this.systemMessage("Player list disintegrity " + player, "ERROR")
+          console.log(this.players)
+          return
+        }
+
+
+        var socket = this.GetPlayerSocket(player)
+        if (isVoid(socket)) {
+          this.systemMessage("Player socket disintegrity " + player, "ERROR")
+          return
+        }
+        this.systemMessage(player + ": Spawn object", "NOTICE")
+        this.systemMessage(JSON.stringify(objArr[i]), "NOTICE")
+        this.emit("object changed", objArr[i])
+
+        socket.emit("object description", objArr[i])
+        this.UpdatePlayerObjectLedger(player, objArr[i])
+
+      } else {
+        // multiplayer
+        // todo: broadcast to all players within a range
+        this.emit("object changed", objArr[i])
+        this.io.broadcast.emit("object description", objArr[i])
+      }
+    }
+
+
   }
+
+
 }
-
-
-
-function generateId() {
-  var min = 1;
-  var max = 100000;
-  return Math.floor(Math.random() * (+max - +min)) + +min;
-}</code></pre>
+</code></pre>
         </article>
     </section>
 
@@ -234,13 +308,13 @@ function generateId() {
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Main.html">Main</a></li></ul><h3>Classes</h3><ul><li><a href="module-Main-AVROS.html">AVROS</a></li></ul><h3>Events</h3><ul><li><a href="module-Main.html#~event:connected">connected</a></li><li><a href="global.html#event:playerentered">player entered</a></li><li><a href="global.html#event:playerupdate">player update</a></li></ul><h3>Global</h3><ul><li><a href="global.html#defaultIcon">defaultIcon</a></li><li><a href="global.html#Reset">Reset</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Main.html">Main</a></li></ul><h3>Classes</h3><ul><li><a href="module-Main-AVROS.html">AVROS</a></li></ul><h3>Events</h3><ul><li><a href="module-Main.html#~event:connected">connected</a></li><li><a href="global.html#event:playerentered">player entered</a></li><li><a href="global.html#event:playerupdate">player update</a></li></ul><h3>Global</h3><ul><li><a href="global.html#-SetTexture">- SetTexture</a></li><li><a href="global.html#defaultIcon">defaultIcon</a></li><li><a href="global.html#Reset">Reset</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.6</a> on Sun Jan 31 2021 17:23:42 GMT+0200 (Eastern European Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.6</a> on Tue Feb 09 2021 12:02:26 GMT+0200 (Eastern European Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>

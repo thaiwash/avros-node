@@ -30,55 +30,6 @@
  * @author Taivas Gogoljuk
  **/
 module.exports = {
-  /**
-   * Describe object to unity instance
-   * @method
-   * @param {Object} Object - Object to update
-   * @param {String} PlayerName - Updated player's name. Required if instance sharing is disabled
-   */
-  "DescribeObject": function(data, player) {
-    if (isVoid(player) &amp;&amp; !this.instanceSharing) {
-      this.systemMessage("Player identity required for unsared instances", "ERROR")
-      return
-    }
-
-
-    // convert to API interpretable form
-    var objArr = this.RecursiveContruct(data)
-
-    console.log(objArr)
-
-    for (var i = 0; i &lt; objArr.length; i++) {
-      if (!this.instanceSharing) {
-        if (isVoid(this.players[player])) {
-          this.systemMessage("Player list disintegrity " + player, "ERROR")
-          console.log(this.players)
-          return
-        }
-
-
-        var socket = this.GetPlayerSocket(player)
-        if (isVoid(socket)) {
-          this.systemMessage("Player socket disintegrity " + player, "ERROR")
-          return
-        }
-        this.systemMessage(player + ": Spawn object", "NOTICE")
-        this.systemMessage(JSON.stringify(objArr[i]), "NOTICE")
-        this.emit("object changed", objArr[i])
-
-        socket.emit("object description", objArr[i])
-        this.UpdatePlayerObjectLedger(player, objArr[i])
-
-      } else {
-        // multiplayer
-        // todo: broadcast to all players within a range
-        this.emit("object changed", objArr[i])
-        this.io.broadcast.emit("object description", objArr[i])
-      }
-    }
-
-
-  },
 
   /**
    * Bookkeeping
@@ -111,9 +62,113 @@ module.exports = {
     if (this.instanceSharing) {
       this.players[player].socket.broadcast.emit("object changed", data)
     }
+    this.UpdatePlayerObjectLedger(player, data)
     this.systemMessage("" + player + " changed object " + data.name + " " + data.object_id, "NOTICE")
+  },
+
+
+  /**
+   * Get all objects within the instance
+   * @method
+   * @return {Array} data - all objects
+   */
+  "AllObjects": function() {
+    var objs = []
+    var playerNames = Object.keys(this.players)
+    for (var i = 0; i &lt; playerNames.length; i++) {
+      if (isVoid(this.players[playerNames[i]].objects)) {
+        this.players[playerNames[i]].objects = []
+      }
+      for (var i2 = 0; i2 &lt; this.players[playerNames[i]].objects.length; i2++) {
+        objs.push(this.players[playerNames[i]].objects[i2])
+      }
+    }
+    return objs
+  },
+  /**
+   * Add tag to object to change its behavior
+
+   Available tags:
+
+   - Grabable - Makes object grabbable by the human
+   - Scalable - Enables object scaling (needs grabable flag to work)
+   - GrabMyParent - This is for grabbable child objects [todo: refacture out]
+
+   * @method
+   * @param {Int} object_id - Object id
+   * @param {String} tag - Tag to add
+   */
+
+  "AddTag": function(object_id, tag) {
+    this.io.sockets.emit("add tag", {
+      "object_id": object_id + "",
+      "tag": tag
+    })
+  },
+  /**
+   * Remove tag to object
+
+   * @method
+   * @param {Int} object_id - Object id
+   * @param {String} tag - Tag to remove
+   */
+
+  "RemoveTag": function(object_id, tag) {
+    this.io.sockets.emit("remove tag", {
+      "object_id": object_id + "",
+      "tag": tag
+    })
+  },
+
+  /**
+   * Get object by id
+
+   * @method
+   * @param {Int} object_id - Object id
+   * @returns {Object} - Object
+   */
+
+   "GetObjectById": function(objectId) {
+     var objs = this.AllObjects()
+     for (var i = 0; i &lt; objs.length; i ++) {
+       if (objs[i].object_id == objectId) {
+         return objs[i]
+       }
+     }
+   },
+
+   /**
+    * Get children
+
+    * @method
+    * @param {Object} object - Constructed object
+    * @returns {Array} - Object array
+    */
+
+    "GetChildren": function(object) {
+      var objs = this.AllObjects()
+      var ret = []
+      for (var i = 0; i &lt; objs.length; i ++) {
+        if (objs[i].parent == object.object_id) {
+          ret.push(objs[i])
+        }
+      }
+      return ret
+    },
+
+
+  /**
+   * Creates an object id
+   * @method
+   * @returns {Int} Returns the generated id
+   */
+  "GenerateId": function() {
+    var min = 1
+    var max = 100000
+    return (Math.floor(Math.random() * (+max - +min)) + min);
   }
-}</code></pre>
+}
+</code></pre>
         </article>
     </section>
 
@@ -123,13 +178,13 @@ module.exports = {
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Main.html">Main</a></li></ul><h3>Classes</h3><ul><li><a href="module-Main-AVROS.html">AVROS</a></li></ul><h3>Events</h3><ul><li><a href="module-Main.html#~event:connected">connected</a></li><li><a href="global.html#event:playerentered">player entered</a></li><li><a href="global.html#event:playerupdate">player update</a></li></ul><h3>Global</h3><ul><li><a href="global.html#defaultIcon">defaultIcon</a></li><li><a href="global.html#Reset">Reset</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-Main.html">Main</a></li></ul><h3>Classes</h3><ul><li><a href="module-Main-AVROS.html">AVROS</a></li></ul><h3>Events</h3><ul><li><a href="module-Main.html#~event:connected">connected</a></li><li><a href="global.html#event:playerentered">player entered</a></li><li><a href="global.html#event:playerupdate">player update</a></li></ul><h3>Global</h3><ul><li><a href="global.html#-SetTexture">- SetTexture</a></li><li><a href="global.html#defaultIcon">defaultIcon</a></li><li><a href="global.html#Reset">Reset</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.6</a> on Sun Jan 31 2021 17:23:42 GMT+0200 (Eastern European Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.6</a> on Tue Feb 09 2021 12:02:26 GMT+0200 (Eastern European Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>
