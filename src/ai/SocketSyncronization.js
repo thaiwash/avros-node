@@ -63,7 +63,7 @@ module.exports = {
 
   },
 
-  
+
 
   "SyncEvent": function(socket, data) {
     var name = socket.playerName
@@ -176,13 +176,13 @@ module.exports = {
   },
 
 
-    /**
-     * Select player specific socket
-     *
-     * @method
-     * @param {String} playerName - player name
-     * @return {Object} socket.IO component -  of the connected player
-     */
+  /**
+   * Select player specific socket
+   *
+   * @method
+   * @param {String} playerName - player name
+   * @return {Object} socket.IO component -  of the connected player
+   */
   "GetPlayerSocket": function(playerName) {
     var self = this
     var sockets = this.io.sockets.clients()

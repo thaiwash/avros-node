@@ -6,6 +6,13 @@
  */
 "use strict";
 
+const {
+  createCanvas,
+  loadImage
+} = require('canvas')
+
+global.createCanvas = createCanvas
+global.loadImage = loadImage
 
 const EventEmitter = require('events');
 global.fs = require('fs');
@@ -35,6 +42,7 @@ class AVROS extends EventEmitter {
     super()
     this.ActivateInstanceIntegrityIntelligence()
     this.players = []
+    this.instanceSharing = true
   }
 
 
@@ -93,6 +101,10 @@ Object.assign(AVROS.prototype, require("./core/AppInformation"))
 Object.assign(AVROS.prototype, require("./core/SystemMessage"))
 Object.assign(AVROS.prototype, require("./database/JSONDatabase"))
 Object.assign(AVROS.prototype, require("./texture/DrawCanvas"))
+Object.assign(AVROS.prototype, require("./collider/BoxCollider"))
+Object.assign(AVROS.prototype, require("./reform/Tier0"))
+Object.assign(AVROS.prototype, require("./reform/Tier1"))
+Object.assign(AVROS.prototype, require("./reform/Tier2"))
 
 
 

@@ -32,7 +32,7 @@ module.exports = {
   "ObjectUpdateEvent": function(data, player) {
     this.emit("object changed", data)
     if (this.instanceSharing) {
-      this.players[player].socket.broadcast.emit("object changed", data)
+      this.GetPlayerSocket(player).broadcast.emit("object changed", data)
     }
     this.UpdatePlayerObjectLedger(player, data)
     this.systemMessage("" + player + " changed object " + data.name + " " + data.object_id, "NOTICE")
@@ -100,43 +100,53 @@ module.exports = {
    * @returns {Object} - Object
    */
 
-   "GetObjectById": function(objectId) {
-     var objs = this.AllObjects()
-     for (var i = 0; i < objs.length; i ++) {
-       if (objs[i].object_id == objectId) {
-         return objs[i]
-       }
-     }
-   },
-
-   /**
-    * Get children
-
-    * @method
-    * @param {Object} object - Constructed object
-    * @returns {Array} - Object array
-    */
-
-    "GetChildren": function(object) {
-      var objs = this.AllObjects()
-      var ret = []
-      for (var i = 0; i < objs.length; i ++) {
-        if (objs[i].parent == object.object_id) {
-          ret.push(objs[i])
-        }
+  "GetObjectById": function(objectId) {
+    var objs = this.AllObjects()
+    for (var i = 0; i < objs.length; i++) {
+      if (objs[i].object_id + "" == objectId) {
+        return objs[i]
       }
-      return ret
-    },
+    }
+  },
+
+  /**
+   * Get children
+
+   * @method
+   * @param {Object} object - Constructed object
+   * @returns {Array} - Object array
+   */
+
+  "GetChildren": function(object) {
+    var objs = this.AllObjects()
+    var ret = []
+    for (var i = 0; i < objs.length; i++) {
+      if (objs[i].parent == object.object_id) {
+        ret.push(objs[i])
+      }
+    }
+    return ret
+  },
 
 
   /**
-   * Creates an object id
-   * @method
-   * @returns {Int} Returns the generated id
-   */
+
+     * Creates an object id
+     * @method
+     * @returns {Int} Returns the generated id
+     */
   "GenerateId": function() {
-    var min = 1
-    var max = 100000
-    return (Math.floor(Math.random() * (+max - +min)) + min);
+    var min = 1000
+    var max = 10000000
+    var rand = (Math.floor(Math.random() * (+max - +min)) + min)
+    var objs = this.AllObjects()
+    for (var i = 0; i < objs.length; i++) {
+      if (objs[i] == rand) {
+        rand = (Math.floor(Math.random() * (+max - +min)) + min)
+        i = 0
+        this.systemMessage("dublicate id event")
+      }
+    }
+    return objs[i];
   }
 }

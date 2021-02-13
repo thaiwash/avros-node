@@ -8,12 +8,12 @@ Object description can have
 
 module.exports = {
   /**
-    * Spawns object in front of connected players
+     * Spawns object in front of connected players
 
-    * @method
-    * @param {String} player - player name
-    * @param {Object} params - description object
- */
+     * @method
+     * @param {String} player - player name
+     * @param {Object} params - description object
+  */
   "SpawnAsInterest": function(player, object) {
     var t1 = new Transform(this.players[player].head.position, this.players[player].head.rotation);
     var vec = t1.transformPosition(new Vector3(0, 0, 0.5))
@@ -79,7 +79,7 @@ module.exports = {
     if (isVoid(object.name)) {
       _obj.name = ""
     } else {
-      _obj.type = object.name
+      _obj.name = object.name
     }
 
     if (!isVoid(object.scale)) {
@@ -173,25 +173,25 @@ module.exports = {
     return _obj
   },
 
-    /**
-     * Constructs an object so that it can be sent to the uninty server
+  /**
+   * Constructs an object so that it can be sent to the uninty server
 
-     * @method
-     * @param {Object} Object - Object to update
-     * @return {Array} ArrayObject - An object array with constructed objects
-     */
-    "Construct": function(obj) {
-      this._constructuonRecursion(obj)
-      var ret = global.collection
-      global.collection = undefined
-      for (let i = 0; i < ret.length; i++) {
-        if (ret[i].children) {
-          delete ret[i].children
-        }
+   * @method
+   * @param {Object} Object - Object to update
+   * @return {Array} ArrayObject - An object array with constructed objects
+   */
+  "Construct": function(obj) {
+    this._constructuonRecursion(obj)
+    var ret = global.collection
+    global.collection = undefined
+    for (let i = 0; i < ret.length; i++) {
+      if (ret[i].children) {
+        delete ret[i].children
       }
-      ret = this.clean(ret)
-      return ret.reverse()
-    },
+    }
+    ret = this.clean(ret)
+    return ret.reverse()
+  },
 
   "clean": function(obj) {
     for (var propName in obj) {
@@ -261,7 +261,7 @@ module.exports = {
         // multiplayer
         // todo: broadcast to all players within a range
         this.emit("object changed", objArr[i])
-        this.io.broadcast.emit("object description", objArr[i])
+        this.io.sockets.emit("object description", objArr[i])
       }
     }
 
