@@ -75,11 +75,23 @@ module.exports = {
   },
 
 
-  "IsWithinCube2": function(point, cube) {
+
+  // Multi level inherited collision detection
+  "IsWithinCube2": function(point, cube /* hinge1, hinge2 */) {
     // get all parents
     // construct 1 tier2 solid object
     // get real matrix positions
-    while (!isVoid(obj.parent)) {
+
+
+    function ParentTransform(obj){
+      var objs = this.AllObjects()
+      for (var i = 0; i < objs.length; i ++) {
+        objs[i].parent == c
+      }
+    }
+
+    var obj = this.GetObjectById(cube.id)
+    while (obj.parent) {
       obj = this.GetObjectById(obj.parent)
     }
 

@@ -17,17 +17,35 @@ module.exports = {
       obj.position.y,
       obj.position.z
     )
-    obj.rotation = new Quaternion(
-      obj.rotation.x,
-      obj.rotation.y,
-      obj.rotation.z,
-      obj.rotation.w
-    )
-    obj.scale = new Vector3(
-      obj.scale.x,
-      obj.scale.y,
-      obj.scale.z
-    )
+
+    if (!isVoid(obj.rotation)) {
+      if (!isVoid(obj.rotation.w)) {
+        obj.rotation = new Quaternion(
+          obj.rotation.x,
+          obj.rotation.y,
+          obj.rotation.z,
+          obj.rotation.w
+        )
+      } else {
+        obj.rotation = Quaternion.Euler(
+          obj.rotation.x,
+          obj.rotation.y,
+          obj.rotation.z
+        )
+      }
+    } else {
+      obj.rotation = new Quaternion()
+    }
+
+    if (!isVoid(obj.scale)) {
+      obj.scale = new Vector3(
+        obj.scale.x,
+        obj.scale.y,
+        obj.scale.z
+      )
+    } else {
+      obj.scale = new Vector3()
+    }
     return obj
   }
 }

@@ -13,7 +13,7 @@ module.exports = {
     if (isVoid(obj)) {
       console.log("Not a valid tier0 object")
       console.log(obj)
-      return
+      return ret
     }
     ret.id = parseInt(obj.object_id)
     ret.type = obj.type
@@ -22,21 +22,49 @@ module.exports = {
       ret.parent = parseInt(obj.parent)
     }
 
-    ret.position = {
-      "x": parseFloat(obj.posX),
-      "y": parseFloat(obj.posY),
-      "z": parseFloat(obj.posZ)
+    if (!isVoid(obj.posX)) {
+      ret.position = {
+        "x": parseFloat(obj.posX),
+        "y": parseFloat(obj.posY),
+        "z": parseFloat(obj.posZ)
+      }
+    } else {
+        ret.position = {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
     }
-    ret.rotation = {
-      "x": parseFloat(obj.rotX),
-      "y": parseFloat(obj.rotY),
-      "z": parseFloat(obj.rotZ),
-      "w": parseFloat(obj.rotW)
+
+    if (!isVoid(obj.rotX)) {
+      ret.rotation = {
+        "x": parseFloat(obj.rotX),
+        "y": parseFloat(obj.rotY),
+        "z": parseFloat(obj.rotZ)
+      }
+      if (!isVoid(obj.rotW)) {
+        ret.rotation.w = parseFloat(obj.rotW)
+      }
+    } else {
+        ret.rotation = {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        }
     }
-    ret.scale = {
-      "x": parseFloat(obj.scaleX),
-      "y": parseFloat(obj.scaleY),
-      "z": parseFloat(obj.scaleZ)
+
+    if (!isVoid(obj.scaleX)) {
+      ret.scale = {
+        "x": parseFloat(obj.scaleX),
+        "y": parseFloat(obj.scaleY),
+        "z": parseFloat(obj.scaleZ)
+      }
+    } else {
+      ret.scale = {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      }
     }
     return ret
   },
