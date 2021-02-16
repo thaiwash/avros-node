@@ -6,6 +6,8 @@
  */
 "use strict";
 
+const THREE = require('three');
+
 const {
   createCanvas,
   loadImage
@@ -30,6 +32,79 @@ global.isVoid = function isVoid(input) {
   return false
 }
 
+
+global.Convert = {
+	ThreeToAvros: {
+		position: function (avrosJson, threeVector3) {
+			avrosJson.posX = threeVector3.x + ""
+			avrosJson.posY = threeVector3.y + ""
+			avrosJson.posZ = threeVector3.z + ""
+
+			return avrosJson
+		},
+
+		rotation: function (avrosJson, threeVector3) {
+
+			threeVector3.z *= -1; // flip Z
+
+			threeVector3.y -= (Math.PI); // Y is 180 degrees off
+
+			var quat = new THREE.Quaternion();
+			quat.setFromEuler(threeVector3);
+
+
+			avrosJson.rotX = (-quat._x) + ""
+			avrosJson.rotY = quat._y + ""
+			avrosJson.rotZ = quat._z + ""
+			avrosJson.rotW = (-quat._w) + ""
+			return avrosJson
+		},
+
+		scale: function (avrosJson, threeVector3) {
+			avrosJson.scaleX = threeVector3.x + ""
+			avrosJson.scaleY = threeVector3.y + ""
+			avrosJson.scaleZ = threeVector3.z + ""
+
+			return avrosJson
+		}
+	},
+	AvrosToThree: {
+
+		position: function (avrosJson) {
+			return new THREE.Vector3(
+				parseFloat(avrosJson.posX),
+				parseFloat(avrosJson.posY),
+				parseFloat(avrosJson.posZ))
+		},
+
+		rotation: function (avrosJson) {
+
+			var qx = parseFloat(avrosJson.rotX)
+			var qy = parseFloat(avrosJson.rotY)
+			var qz = parseFloat(avrosJson.rotZ)
+			var qw = parseFloat(avrosJson.rotW)
+
+			var q = new THREE.Quaternion( -qx, qy, qz, -qw )
+			var v = new THREE.Euler()
+			v.setFromQuaternion( q )
+
+			v.y += (Math.PI) // Y is 180 degrees off
+
+
+			v.z *= -1 // flip Z
+
+			//this.camera.rotation.copy(v)
+			return v
+		},
+
+		scale: function (avrosJson) {
+			return new THREE.Vector3(
+				parseFloat(avrosJson.scaleX),
+				parseFloat(avrosJson.scaleY),
+				parseFloat(avrosJson.scaleZ))
+		}
+	}
+}
 
 
 /**
