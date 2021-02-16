@@ -7,8 +7,7 @@ Tier2 is Math3d library converted, and can be used for further calculations
  */
 
 module.exports = {
-  "Tier2": {
-    "Tier0": function(object) {
+  "Tier2ToTier0": function(object) {
 
 
       var _obj = {}
@@ -139,8 +138,7 @@ module.exports = {
 
       return _obj
     },
-    "Tier1": function(obj) {
-      return this.Tier0.Tier1(this.Reform.Tier2.Tier0(obj))
+    "Tier2ToTier1": function(obj) {
+      return this.Tier0ToTier1(this.Tier2ToTier0(obj))
     }
-  }
 }
