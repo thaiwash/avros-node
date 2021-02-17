@@ -8,15 +8,15 @@ Tier2 is Math3d library converted, and can be used for further calculations
 
 module.exports = {
   "Tier1ToTier0": function(obj) {
-    return this.Tier1ToTier2(this.Tier2ToTier0(obj))
+    return this.Tier2ToTier0(this.Tier1ToTier2(obj))
   },
   "Tier1ToTier2": function(obj) {
 
     if (!isVoid(obj.position)) {
       obj.position = new Vector3(
-        obj.position.x,
-        obj.position.y,
-        obj.position.z
+        parseFloat(obj.position.x),
+        parseFloat(obj.position.y),
+        parseFloat(obj.position.z)
       )
     } else {
         obj.position = new Vector3()
@@ -25,17 +25,17 @@ module.exports = {
     if (!isVoid(obj.rotation)) {
       if (!isVoid(obj.rotation.w)) {
         obj.rotation = new Quaternion(
-          obj.rotation.x,
-          obj.rotation.y,
-          obj.rotation.z,
-          obj.rotation.w
+          parseFloat(obj.rotation.x),
+          parseFloat(obj.rotation.y),
+          parseFloat(obj.rotation.z),
+          parseFloat(obj.rotation.w)
         )
       } else {
-        obj.rotation = Quaternion.Euler(
-          obj.rotation.x,
-          obj.rotation.y,
-          obj.rotation.z
-        )
+          obj.rotation = Quaternion.Euler(
+            parseFloat(obj.rotation.x),
+            parseFloat(obj.rotation.y),
+            parseFloat(obj.rotation.z)
+          )
       }
     } else {
       obj.rotation = new Quaternion()
@@ -43,13 +43,14 @@ module.exports = {
 
     if (!isVoid(obj.scale)) {
       obj.scale = new Vector3(
-        obj.scale.x,
-        obj.scale.y,
-        obj.scale.z
+        parseFloat(obj.scale.x),
+        parseFloat(obj.scale.y),
+        parseFloat(obj.scale.z)
       )
     } else {
       obj.scale = new Vector3()
     }
+
     return obj
   }
 }

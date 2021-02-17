@@ -6,8 +6,8 @@ Tier1 is Human readable JSON, it's optimized for manual configuration.
 Tier2 is Math3d library converted, and can be used for further calculations
  */
 
-module.exports = {
-  "Tier2ToTier0": function(object) {
+ module.exports = {
+   "Tier2ToTier0": function(object) {
 
 
       var _obj = {}
@@ -139,6 +139,6 @@ module.exports = {
       return _obj
     },
     "Tier2ToTier1": function(obj) {
-      return this.Tier0ToTier1(this.Tier2ToTier0(obj))
+      return this.Tier2ToTier0(this.Tier0ToTier1(obj))
     }
 }

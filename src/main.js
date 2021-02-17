@@ -6,7 +6,13 @@
  */
 "use strict";
 
-const THREE = require('three');
+global.THREE = require('three');
+
+//Object.assign(AVROS.prototype, require("./core/CreateObject"))
+var math3d = require("math3d")
+global.Vector3 = math3d.Vector3;
+global.Quaternion = math3d.Quaternion;
+global.Transform = math3d.Transform;
 
 const {
   createCanvas,
@@ -19,11 +25,6 @@ global.loadImage = loadImage
 const EventEmitter = require('events');
 global.fs = require('fs');
 
-//Object.assign(AVROS.prototype, require("./core/CreateObject"))
-var math3d = require("math3d")
-global.Vector3 = math3d.Vector3;
-global.Quaternion = math3d.Quaternion;
-global.Transform = math3d.Transform;
 
 global.isVoid = function isVoid(input) {
   if (typeof input == "undefined") {

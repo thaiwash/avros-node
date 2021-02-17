@@ -8,9 +8,9 @@ var fileCube = {
   "type": "cube",
   "id": 11011,
   "scale": {
-    "x": "0.1",
-    "y": "0.1",
-    "z": "0.1"
+    "x": 0.1,
+    "y": 0.1,
+    "z": 0.1
   }
 }
 instance.on("player enter", function(player) {

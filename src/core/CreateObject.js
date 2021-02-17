@@ -16,7 +16,32 @@ module.exports = {
   */
   "SpawnAsInterest": function(player, object) {
     var t1 = new Transform(this.players[player].head.position, this.players[player].head.rotation);
+
     var vec = t1.transformPosition(new Vector3(0, 0, 0.5))
+
+
+    object.position = vec
+    object.rotation = this.players[player].head.rotation
+
+    this.DescribeObject(object, player)
+  },
+
+  "SpawnAsInterestThree": function(player, object) {
+    //var t1 = new Transform(this.players[player].head.position, this.players[player].head.rotation);
+    var head = new THREE.Object3D()
+    head.quaternion = this.players[player].head.rotation
+    head.position = this.players[player].head.position
+
+    var obj = new THREE.Object3D()
+    head.add(obj)
+    obj.position = new THREE.Vector3(0, 0, 0.5)
+
+    //var vec = t1.transformPosition(new Vector3(0, 0, 0.5))
+
+    var vec = new THREE.Vector3()
+    obj.getWorldPosition(vec)
+    //var quat = new THREE.Quaternion()
+    //obj.getWorldQuaternion(quat)
 
     object.position = vec
     object.rotation = this.players[player].head.rotation
@@ -109,7 +134,7 @@ module.exports = {
     // convert to API interpretable form
     var objArr = this.Construct(data)
 
-    //console.log(objArr)
+    console.log(objArr)
 
     for (var i = 0; i < objArr.length; i++) {
       if (!this.instanceSharing) {

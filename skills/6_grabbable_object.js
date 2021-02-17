@@ -12,11 +12,15 @@ var cube = {
     "z": "0.1"
   }
 }
+
+
+
 instance.on("player enter", function(player) {
   console.log("Player " + player + " entered")
 
   instance.SpawnAsInterest(player, cube)
 
-  instance.AddTag(cube_id, "Grabable")
-  instance.AddTag(cube_id, "Scalable")
+  // we now make code scalable and grabbable.
+  instance.AddTag(cube.id, "Grabable")
+  instance.AddTag(cube.id, "Scalable")
 })

@@ -31,9 +31,11 @@ module.exports = {
 
   "ObjectUpdateEvent": function(data, player) {
     this.emit("object changed", data)
+    /* this seems to be broken so lets leave this to synronization AI
     if (this.instanceSharing) {
       this.GetPlayerSocket(player).broadcast.emit("object changed", data)
     }
+    */
     this.UpdatePlayerObjectLedger(player, data)
     this.systemMessage("" + player + " changed object " + data.name + " " + data.object_id, "NOTICE")
   },
@@ -147,6 +149,6 @@ module.exports = {
         this.systemMessage("dublicate id event")
       }
     }
-    return objs[i];
+    return rand;
   }
 }
