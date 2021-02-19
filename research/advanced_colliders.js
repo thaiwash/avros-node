@@ -1,4 +1,3 @@
-
 var AVROS = require("../src/main.js")
 var instance = new AVROS()
 instance.Serve(9447)
@@ -60,3 +59,36 @@ instance.on("player update", function(player) {
     }
   }
 })
+
+function Intersection(point, cube) {
+  var box = new THREE.Object3D()
+  box.position = new THREE.Vector3(
+    cube.position.x,
+    cube.position.y,
+    cube.position.z
+  )
+
+  box.scale = new THREE.Vector3(
+    cube.scale.x,
+    cube.scale.y,
+    cube.scale.z
+  )
+  box.rotation = new THREE.Quaternion(
+    cube.rotation.x,
+    cube.rotation.y,
+    cube.rotation.z,
+    cube.rotation.x
+  )
+  var sphere = new THREE.Sphere(
+    new THREE.Vector3(
+      point.x,
+      point.y,
+      point.z
+    ),
+    0.2
+  )
+
+  var b = new THREE.Box3()
+  b.setFromObject(box)
+  return b.intersectsSphere(sphere)
+}

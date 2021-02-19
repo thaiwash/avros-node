@@ -48,7 +48,7 @@ module.exports = {
         parseFloat(obj.scale.z)
       )
     } else {
-      obj.scale = new Vector3()
+      obj.scale = new Vector3(1,1,1)
     }
 
     return obj

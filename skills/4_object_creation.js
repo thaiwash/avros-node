@@ -4,7 +4,7 @@ instance.Serve(9447)
 instance.AppInformation("Tester")
 
 // File cube = 11011
-var fileCube = {
+var cube = {
   "type": "cube",
   "id": 11011,
   "scale": {
@@ -15,5 +15,5 @@ var fileCube = {
 }
 instance.on("player enter", function(player) {
   console.log("Player " + player + " entered")
-  instance.SpawnAsInterest(player, fileCube)
+  instance.SpawnAsInterest(player, cube)
 })

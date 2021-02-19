@@ -134,7 +134,7 @@ module.exports = {
     // convert to API interpretable form
     var objArr = this.Construct(data)
 
-    console.log(objArr)
+        //console.log(objArr)
 
     for (var i = 0; i < objArr.length; i++) {
       if (!this.instanceSharing) {
@@ -158,6 +158,7 @@ module.exports = {
         this.UpdatePlayerObjectLedger(player, objArr[i])
 
       } else {
+        console.log("sockets emit")
         // multiplayer
         // todo: broadcast to all players within a range
         this.emit("object changed", objArr[i])

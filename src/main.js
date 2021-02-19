@@ -171,6 +171,7 @@ class AVROS extends EventEmitter {
 
 Object.assign(AVROS.prototype, require("./core/CreateObject"))
 Object.assign(AVROS.prototype, require("./core/ObjectManagement"))
+Object.assign(AVROS.prototype, require("./core/ObjectTransform"))
 Object.assign(AVROS.prototype, require("./ai/SocketSyncronization"))
 Object.assign(AVROS.prototype, require("./ai/InstanceRationalization"))
 Object.assign(AVROS.prototype, require("./core/AppInformation"))

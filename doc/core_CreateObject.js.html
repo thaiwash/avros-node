@@ -36,15 +36,40 @@ Object description can have
 
 module.exports = {
   /**
-    * Spawns object in front of connected players
+     * Spawns object in front of connected players
 
-    * @method
-    * @param {String} player - player name
-    * @param {Object} params - description object
- */
+     * @method
+     * @param {String} player - player name
+     * @param {Object} params - description object
+  */
   "SpawnAsInterest": function(player, object) {
     var t1 = new Transform(this.players[player].head.position, this.players[player].head.rotation);
+
     var vec = t1.transformPosition(new Vector3(0, 0, 0.5))
+
+
+    object.position = vec
+    object.rotation = this.players[player].head.rotation
+
+    this.DescribeObject(object, player)
+  },
+
+  "SpawnAsInterestThree": function(player, object) {
+    //var t1 = new Transform(this.players[player].head.position, this.players[player].head.rotation);
+    var head = new THREE.Object3D()
+    head.quaternion = this.players[player].head.rotation
+    head.position = this.players[player].head.position
+
+    var obj = new THREE.Object3D()
+    head.add(obj)
+    obj.position = new THREE.Vector3(0, 0, 0.5)
+
+    //var vec = t1.transformPosition(new Vector3(0, 0, 0.5))
+
+    var vec = new THREE.Vector3()
+    obj.getWorldPosition(vec)
+    //var quat = new THREE.Quaternion()
+    //obj.getWorldQuaternion(quat)
 
     object.position = vec
     object.rotation = this.players[player].head.rotation
@@ -75,151 +100,26 @@ module.exports = {
     }
   },
 
-  "_construct": function(object) {
-    var _obj = {}
-    if (!isVoid(object.id)) {
-      _obj.object_id = parseInt(object.id) + ""
-    } else {
-      _obj.object_id = this.GenerateId() + ""
-    }
 
+  /**
+   * Constructs an object so that it can be sent to the uninty server
 
-    if (!isVoid(object.object_id)) {
-      _obj.object_id = parseInt(object.object_id) + ""
-    }
-
-    if (isVoid(_obj.object_id)) {
-      _obj.object_id = this.GenerateId() + ""
-    }
-
-    if (_obj.object_id.length == 0) {
-      console.warn("Refacturing ID complications")
-      _obj.object_id = this.GenerateId() + ""
-    }
-
-
-    if (isVoid(object.type)) {
-      _obj.type = "empty"
-    } else {
-      _obj.type = object.type
-    }
-
-    if (isVoid(object.name)) {
-      _obj.name = ""
-    } else {
-      _obj.type = object.name
-    }
-
-    if (!isVoid(object.scale)) {
-      _obj.scaleX = object.scale.x + ""
-      _obj.scaleY = object.scale.y + ""
-      _obj.scaleZ = object.scale.z + ""
-    } else {
-      if (isVoid(object.scaleX)) {
-        _obj.scaleX = "1"
-      } else {
-        _obj.scaleX = object.scaleX
-      }
-      if (isVoid(object.scaleY)) {
-        _obj.scaleY = "1"
-      } else {
-        _obj.scaleY = object.scaleY
-      }
-      if (isVoid(object.scaleZ)) {
-        _obj.scaleZ = "1"
-      } else {
-        _obj.scaleZ = object.scaleZ
+   * @method
+   * @param {Object} Object - Object to update
+   * @return {Array} ArrayObject - An object array with constructed objects
+   */
+  "Construct": function(obj) {
+    this._constructuonRecursion(obj)
+    var ret = global.collection
+    global.collection = undefined
+    for (let i = 0; i &lt; ret.length; i++) {
+      if (ret[i].children) {
+        delete ret[i].children
       }
     }
-
-    if (!isVoid(object.position)) {
-      _obj.posX = object.position.x + ""
-      _obj.posY = object.position.y + ""
-      _obj.posZ = object.position.z + ""
-    } else {
-      if (isVoid(object.posX)) {
-        _obj.posX = "0"
-      } else {
-        _obj.posX = object.posX + ""
-      }
-      if (isVoid(object.posY)) {
-        _obj.posY = "0"
-      } else {
-        _obj.posY = object.posY + ""
-      }
-      if (isVoid(object.posZ)) {
-        _obj.posZ = "0"
-      } else {
-        _obj.posZ = object.posZ + ""
-      }
-    }
-
-    if (!isVoid(object.rotation)) {
-      if (!isVoid(object.rotation.w)) {
-        _obj.rotX = object.rotation.x + ""
-        _obj.rotY = object.rotation.y + ""
-        _obj.rotZ = object.rotation.z + ""
-        _obj.rotW = object.rotation.w + ""
-      } else {
-        var q = Quaternion.Euler(parseInt(object.rotation.x), parseInt(object.rotation.y), parseInt(object.rotation.z))
-        _obj.rotX = q.x + ""
-        _obj.rotY = q.y + ""
-        _obj.rotZ = q.z + ""
-        _obj.rotW = q.w + ""
-      }
-    } else {
-      if (isVoid(object.rotX)) {
-        _obj.rotX = "0"
-      } else {
-        _obj.rotX = object.rotX + ""
-      }
-      if (isVoid(object.rotY)) {
-        _obj.rotY = "0"
-      } else {
-        _obj.rotY = object.rotY + ""
-      }
-      if (isVoid(object.rotZ)) {
-        _obj.rotZ = "0"
-      } else {
-        _obj.rotZ = object.rotZ + ""
-      }
-      if (isVoid(object.rotW)) {
-        _obj.rotW = "0"
-      } else {
-        _obj.rotW = object.rotW + ""
-      }
-    }
-
-    if (!isVoid(object.parent)) {
-      _obj.parent = object.parent + ""
-    }
-
-    if (!isVoid(object.children)) {
-      _obj.children = object.children
-    }
-
-    return _obj
+    ret = this.clean(ret)
+    return ret.reverse()
   },
-
-    /**
-     * Constructs an object so that it can be sent to the uninty server
-
-     * @method
-     * @param {Object} Object - Object to update
-     * @return {Array} ArrayObject - An object array with constructed objects
-     */
-    "Construct": function(obj) {
-      this._constructuonRecursion(obj)
-      var ret = global.collection
-      global.collection = undefined
-      for (let i = 0; i &lt; ret.length; i++) {
-        if (ret[i].children) {
-          delete ret[i].children
-        }
-      }
-      ret = this.clean(ret)
-      return ret.reverse()
-    },
 
   "clean": function(obj) {
     for (var propName in obj) {
@@ -231,7 +131,7 @@ module.exports = {
   },
 
   "_constructuonRecursion": function(obj) {
-    obj = this._construct(obj)
+    obj = this.Tier1ToTier0(obj)
     if (!isVoid(obj.children)) {
       for (let i = 0; i &lt; obj.children.length; i++) {
         obj.children[i].parent = obj.object_id
@@ -262,7 +162,7 @@ module.exports = {
     // convert to API interpretable form
     var objArr = this.Construct(data)
 
-    //console.log(objArr)
+        //console.log(objArr)
 
     for (var i = 0; i &lt; objArr.length; i++) {
       if (!this.instanceSharing) {
@@ -286,10 +186,11 @@ module.exports = {
         this.UpdatePlayerObjectLedger(player, objArr[i])
 
       } else {
+        console.log("sockets emit")
         // multiplayer
         // todo: broadcast to all players within a range
         this.emit("object changed", objArr[i])
-        this.io.broadcast.emit("object description", objArr[i])
+        this.io.sockets.emit("object description", objArr[i])
       }
     }
 
@@ -314,7 +215,7 @@ module.exports = {
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.6</a> on Tue Feb 09 2021 12:02:26 GMT+0200 (Eastern European Standard Time)
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.6</a> on Wed Feb 17 2021 20:44:21 GMT+0200 (Eastern European Standard Time)
 </footer>
 
 <script> prettyPrint(); </script>

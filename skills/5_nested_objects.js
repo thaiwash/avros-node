@@ -24,7 +24,9 @@ var cube = {
   }]
 }
 
+
 instance.on("player enter", function(player) {
   console.log("Player " + player + " entered")
+  //console.log(instance.Construct(cube))
   instance.SpawnAsInterest(player, cube)
 })

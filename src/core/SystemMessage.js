@@ -54,7 +54,7 @@ module.exports = {
       console.log(FgYellow + "Warn: " + message + FgWhite)
     }
     if (type == "NOTICE") {
-      console.log(FgGreen + "Notice: " + message + FgWhite)
+      //console.log(FgGreen + "Notice: " + message + FgWhite)
     }
   }
 }
