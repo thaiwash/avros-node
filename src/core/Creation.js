@@ -7,8 +7,31 @@ Object description can have
  **/
 
 module.exports = {
+
+
+  /**
+     * Sets object in front of connected players
+
+     * @method
+     * @param {String} player - player name
+     * @param {Object} object - tier1
+  */
+  "BlessingsOfPosition": function(player, object) {
+    var self = instance
+    var t1 = new Transform(self.players[player].head.position, self.players[player].head.rotation);
+
+    var vec = t1.transformPosition(new Vector3(0, 0, 0.5))
+
+
+    object.position = vec
+    object.rotation = self.players[player].head.rotation
+
+    return object
+  },
+
   /**
      * Spawns object in front of connected players
+     (to be depricated)
 
      * @method
      * @param {String} player - player name
@@ -134,7 +157,7 @@ module.exports = {
     // convert to API interpretable form
     var objArr = this.Construct(data)
 
-        //console.log(objArr)
+    //console.log(objArr)
 
     for (var i = 0; i < objArr.length; i++) {
       if (!this.instanceSharing) {

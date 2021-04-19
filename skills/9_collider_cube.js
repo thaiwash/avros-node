@@ -1,4 +1,3 @@
-
 var AVROS = require("../src/main.js")
 var instance = new AVROS()
 instance.Serve(9447)
@@ -40,8 +39,8 @@ instance.on("player update", function(player) {
     console.log("not found")
     return
   }
-  //console.log(instance.GetObjectById(cube.id))
-  //console.log(instance.GetObjectById(cube.children[0].id))
+  console.log(instance.GetObjectById(cube.id))
+  console.log(instance.GetObjectById(cube.children[0].id))
   var obj = instance.Tier0ToTier2(instance.GetObjectById(cube.id))
   var obj2 = instance.Tier0ToTier2(instance.GetObjectById(cube.children[0].id))
   //console.log(obj)

@@ -8,7 +8,10 @@ Tier2 is Math3d library converted, and can be used for further calculations
 
 module.exports = {
   "Tier1ToTier0": function(obj) {
-    return this.Tier2ToTier0(this.Tier1ToTier2(obj))
+    console.log(this.Tier1ToTier2(obj).id)
+    console.log(this.Tier2ToTier3(this.Tier1ToTier2(obj)))
+    //console.log(this.Tier3ToTier0(this.Tier2ToTier3(this.Tier1ToTier2(obj)))
+    return this.Tier3ToTier0(this.Tier2ToTier3(this.Tier1ToTier2(obj)))
   },
   "Tier1ToTier2": function(obj) {
 
@@ -19,7 +22,7 @@ module.exports = {
         parseFloat(obj.position.z)
       )
     } else {
-        obj.position = new Vector3()
+      obj.position = new Vector3()
     }
 
     if (!isVoid(obj.rotation)) {
@@ -31,11 +34,11 @@ module.exports = {
           parseFloat(obj.rotation.w)
         )
       } else {
-          obj.rotation = Quaternion.Euler(
-            parseFloat(obj.rotation.x),
-            parseFloat(obj.rotation.y),
-            parseFloat(obj.rotation.z)
-          )
+        obj.rotation = Quaternion.Euler(
+          parseFloat(obj.rotation.x),
+          parseFloat(obj.rotation.y),
+          parseFloat(obj.rotation.z)
+        )
       }
     } else {
       obj.rotation = new Quaternion()
@@ -48,9 +51,12 @@ module.exports = {
         parseFloat(obj.scale.z)
       )
     } else {
-      obj.scale = new Vector3(1,1,1)
+      obj.scale = new Vector3(1, 1, 1)
     }
 
     return obj
+  },
+  "Tier1ToTier3": function(obj) {
+    return this.Tier2ToTier3(this.Tier1ToTier2(obj))
   }
 }

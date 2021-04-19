@@ -7,6 +7,7 @@
 "use strict";
 
 global.THREE = require('three');
+global.AVROS = {}
 
 //Object.assign(AVROS.prototype, require("./core/CreateObject"))
 var math3d = require("math3d")
@@ -35,99 +36,93 @@ global.isVoid = function isVoid(input) {
 
 
 global.Convert = {
-	ThreeToAvros: {
-		position: function (avrosJson, threeVector3) {
-			avrosJson.posX = threeVector3.x + ""
-			avrosJson.posY = threeVector3.y + ""
-			avrosJson.posZ = threeVector3.z + ""
+  ThreeToAvros: {
+    position: function(avrosJson, threeVector3) {
+      avrosJson.posX = threeVector3.x + ""
+      avrosJson.posY = threeVector3.y + ""
+      avrosJson.posZ = threeVector3.z + ""
 
-			return avrosJson
-		},
+      return avrosJson
+    },
 
-		rotation: function (avrosJson, threeVector3) {
+    rotation: function(avrosJson, threeVector3) {
 
-			threeVector3.z *= -1; // flip Z
+      threeVector3.z *= -1; // flip Z
 
-			threeVector3.y -= (Math.PI); // Y is 180 degrees off
+      threeVector3.y -= (Math.PI); // Y is 180 degrees off
 
-			var quat = new THREE.Quaternion();
-			quat.setFromEuler(threeVector3);
-
-
-			avrosJson.rotX = (-quat._x) + ""
-			avrosJson.rotY = quat._y + ""
-			avrosJson.rotZ = quat._z + ""
-			avrosJson.rotW = (-quat._w) + ""
-			return avrosJson
-		},
-
-		scale: function (avrosJson, threeVector3) {
-			avrosJson.scaleX = threeVector3.x + ""
-			avrosJson.scaleY = threeVector3.y + ""
-			avrosJson.scaleZ = threeVector3.z + ""
-
-			return avrosJson
-		}
-	},
-	AvrosToThree: {
-
-		position: function (avrosJson) {
-			return new THREE.Vector3(
-				parseFloat(avrosJson.posX),
-				parseFloat(avrosJson.posY),
-				parseFloat(avrosJson.posZ))
-		},
-
-		rotation: function (avrosJson) {
-
-			var qx = parseFloat(avrosJson.rotX)
-			var qy = parseFloat(avrosJson.rotY)
-			var qz = parseFloat(avrosJson.rotZ)
-			var qw = parseFloat(avrosJson.rotW)
-
-			var q = new THREE.Quaternion( -qx, qy, qz, -qw )
-			var v = new THREE.Euler()
-			v.setFromQuaternion( q )
-
-			v.y += (Math.PI) // Y is 180 degrees off
+      var quat = new THREE.Quaternion();
+      quat.setFromEuler(threeVector3);
 
 
-			v.z *= -1 // flip Z
+      avrosJson.rotX = (-quat._x) + ""
+      avrosJson.rotY = quat._y + ""
+      avrosJson.rotZ = quat._z + ""
+      avrosJson.rotW = (-quat._w) + ""
+      return avrosJson
+    },
 
-			//this.camera.rotation.copy(v)
-			return v
-		},
+    scale: function(avrosJson, threeVector3) {
+      avrosJson.scaleX = threeVector3.x + ""
+      avrosJson.scaleY = threeVector3.y + ""
+      avrosJson.scaleZ = threeVector3.z + ""
 
-		scale: function (avrosJson) {
-			return new THREE.Vector3(
-				parseFloat(avrosJson.scaleX),
-				parseFloat(avrosJson.scaleY),
-				parseFloat(avrosJson.scaleZ))
-		}
-	}
+      return avrosJson
+    }
+  },
+  AvrosToThree: {
+
+    position: function(avrosJson) {
+      return new THREE.Vector3(
+        parseFloat(avrosJson.posX),
+        parseFloat(avrosJson.posY),
+        parseFloat(avrosJson.posZ))
+    },
+
+    rotation: function(avrosJson) {
+
+      var qx = parseFloat(avrosJson.rotX)
+      var qy = parseFloat(avrosJson.rotY)
+      var qz = parseFloat(avrosJson.rotZ)
+      var qw = parseFloat(avrosJson.rotW)
+
+      var q = new THREE.Quaternion(-qx, qy, qz, -qw)
+      var v = new THREE.Euler()
+      v.setFromQuaternion(q)
+
+      v.y += (Math.PI) // Y is 180 degrees off
+
+
+      v.z *= -1 // flip Z
+
+      //this.camera.rotation.copy(v)
+      return v
+    },
+
+    scale: function(avrosJson) {
+      return new THREE.Vector3(
+        parseFloat(avrosJson.scaleX),
+        parseFloat(avrosJson.scaleY),
+        parseFloat(avrosJson.scaleZ))
+    }
+  }
 }
 
 
 /**
  * Main class of the system, it works like an event emitter
- * @class AVROS
+ * @class Serve
+ * @constructor {Number} port - The port number to use.
  */
 
-class AVROS extends EventEmitter {
-  constructor() {
+class Serve extends EventEmitter {
+  constructor(port) {
     super()
+    var self = this
+    
     this.ActivateInstanceIntegrityIntelligence()
     this.players = []
     this.instanceSharing = true
-  }
-
-
-  /**
-   * Opens a socket port for an AVROS application
-   * @param {Number} port - The port number to use.
-   */
-  Serve(port) {
-    var self = this
 
     var express = require('express');
     this.app = express()
@@ -169,24 +164,26 @@ class AVROS extends EventEmitter {
 
 }
 
-Object.assign(AVROS.prototype, require("./core/CreateObject"))
-Object.assign(AVROS.prototype, require("./core/ObjectManagement"))
-Object.assign(AVROS.prototype, require("./core/ObjectTransform"))
-Object.assign(AVROS.prototype, require("./ai/SocketSyncronization"))
-Object.assign(AVROS.prototype, require("./ai/InstanceRationalization"))
-Object.assign(AVROS.prototype, require("./core/AppInformation"))
-Object.assign(AVROS.prototype, require("./core/SystemMessage"))
-Object.assign(AVROS.prototype, require("./database/JSONDatabase"))
-Object.assign(AVROS.prototype, require("./texture/DrawCanvas"))
-Object.assign(AVROS.prototype, require("./collider/BoxCollider"))
-Object.assign(AVROS.prototype, require("./reform/Tier0"))
-Object.assign(AVROS.prototype, require("./reform/Tier1"))
-Object.assign(AVROS.prototype, require("./reform/Tier2"))
+
+Object.assign(Serve.prototype, require("./ai/SocketSyncronization"))
+Object.assign(Serve.prototype, require("./ai/InstanceRationalization"))
+Object.assign(Serve.prototype, require("./core/ObjectManagement"))
+Object.assign(Serve.prototype, require("./core/Creation"))
+Object.assign(Serve.prototype, require("./core/ObjectTransform"))
+Object.assign(Serve.prototype, require("./core/AppInformation"))
+Object.assign(Serve.prototype, require("./core/SystemMessage"))
+Object.assign(Serve.prototype, require("./database/JSONDatabase"))
+Object.assign(Serve.prototype, require("./texture/DrawCanvas"))
+Object.assign(Serve.prototype, require("./collider/BoxCollider"))
+Object.assign(Serve.prototype, require("./reform/Tier0"))
+Object.assign(Serve.prototype, require("./reform/Tier1"))
+Object.assign(Serve.prototype, require("./reform/Tier2"))
+Object.assign(Serve.prototype, require("./reform/Tier3"))
+require("./thing/Thing")
 
 
 
 
 
 
-
-module.exports = AVROS
+global.AVROS.Serve = Serve

@@ -7,138 +7,75 @@ Tier2 is Math3d library converted, and can be used for further calculations
  */
 
  module.exports = {
+   "Tier2ToTier3": function(obj) {
+
+
+      function ConvertRotation(qx, qy, qz, qw) {
+
+        var q = new THREE.Quaternion(-qx, qy, qz, -qw)
+        var v = new THREE.Euler()
+        v.setFromQuaternion(q)
+
+        v.y += (Math.PI) // Y is 180 degrees off
+
+
+        v.z *= -1 // flip Z
+
+        return v
+      }
+
+      var scale = new THREE.Vector3()
+
+      if (!isVoid(obj.scale)) {
+        scale = new THREE.Vector3(obj.scale.x, obj.scale.y, obj.scale.z)
+      }
+ 
+     // type = empty
+     var object = new THREE.Object3D()
+ 
+     if (!isVoid(obj.type)) {
+       if (obj.type == "cube") {
+         object = new THREE.BoxGeometry( scale.x, scale.y, scale.z )
+       }
+       if (obj.type == "sphere") {
+         object = new THREE.SphereGeometry( scale.x, scale.y, scale.z )
+       }
+       if (obj.type == "plane") {
+        object = new THREE.PlaneGeometry( scale.x, scale.y, scale.z )
+       }
+     }
+
+
+     if (!isVoid(obj.position)) {
+      object.position = new THREE.Vector3(obj.position.x, obj.position.y, obj.position.z)
+    }
+
+    if (!isVoid(obj.rotation)) {
+      object.rotation = ConvertRotation(obj.rotation.x, obj.rotation.y, obj.rotation.z, obj.rotation.w)
+    }
+
+    if (!isVoid(obj.id)) {
+      //is this doable?
+      object.object_id = obj.id
+    }
+
+    if (!isVoid(obj.parent)) {
+      object.parent = obj.parent
+    }
+
+    if (!isVoid(obj.name)) {
+      object.name = obj.name
+    }
+
+     return object
+   },
+
    "Tier2ToTier0": function(object) {
 
 
-           var _obj = {}
-           if (!isVoid(object.id)) {
-             _obj.object_id = parseInt(object.id) + ""
-           } else {
-             _obj.object_id = this.GenerateId() + ""
-           }
-
-
-           if (!isVoid(object.object_id)) {
-             _obj.object_id = parseInt(object.object_id) + ""
-           }
-
-           if (isVoid(_obj.object_id)) {
-             _obj.object_id = this.GenerateId() + ""
-           }
-
-           if (_obj.object_id.length == 0) {
-             console.warn("Refacturing ID complications")
-             _obj.object_id = this.GenerateId() + ""
-           }
-
-
-           if (isVoid(object.type)) {
-             _obj.type = "empty"
-           } else {
-             _obj.type = object.type
-           }
-
-           if (isVoid(object.name)) {
-             _obj.name = ""
-           } else {
-             _obj.name = object.name
-           }
-
-           if (!isVoid(object.scale)) {
-             _obj.scaleX = object.scale.x + ""
-             _obj.scaleY = object.scale.y + ""
-             _obj.scaleZ = object.scale.z + ""
-           } else {
-             if (isVoid(object.scaleX)) {
-               _obj.scaleX = "1"
-             } else {
-               _obj.scaleX = object.scaleX
-             }
-             if (isVoid(object.scaleY)) {
-               _obj.scaleY = "1"
-             } else {
-               _obj.scaleY = object.scaleY
-             }
-             if (isVoid(object.scaleZ)) {
-               _obj.scaleZ = "1"
-             } else {
-               _obj.scaleZ = object.scaleZ
-             }
-           }
-
-           if (!isVoid(object.position)) {
-             _obj.posX = object.position.x + ""
-             _obj.posY = object.position.y + ""
-             _obj.posZ = object.position.z + ""
-           } else {
-             if (isVoid(object.posX)) {
-               _obj.posX = "0"
-             } else {
-               _obj.posX = object.posX + ""
-             }
-             if (isVoid(object.posY)) {
-               _obj.posY = "0"
-             } else {
-               _obj.posY = object.posY + ""
-             }
-             if (isVoid(object.posZ)) {
-               _obj.posZ = "0"
-             } else {
-               _obj.posZ = object.posZ + ""
-             }
-           }
-
-           if (!isVoid(object.rotation)) {
-             if (!isVoid(object.rotation.w)) {
-               _obj.rotX = object.rotation.x + ""
-               _obj.rotY = object.rotation.y + ""
-               _obj.rotZ = object.rotation.z + ""
-               _obj.rotW = object.rotation.w + ""
-             } else {
-               var q = Quaternion.Euler(
-                 parseInt(object.rotation.x),
-                 parseInt(object.rotation.y),
-                 parseInt(object.rotation.z)
-               )
-               _obj.rotX = q.x + ""
-               _obj.rotY = q.y + ""
-               _obj.rotZ = q.z + ""
-               _obj.rotW = q.w + ""
-             }
-           } else {
-             if (isVoid(object.rotX)) {
-               _obj.rotX = "0"
-             } else {
-               _obj.rotX = object.rotX + ""
-             }
-             if (isVoid(object.rotY)) {
-               _obj.rotY = "0"
-             } else {
-               _obj.rotY = object.rotY + ""
-             }
-             if (isVoid(object.rotZ)) {
-               _obj.rotZ = "0"
-             } else {
-               _obj.rotZ = object.rotZ + ""
-             }
-             if (isVoid(object.rotW)) {
-               _obj.rotW = "0"
-             } else {
-               _obj.rotW = object.rotW + ""
-             }
-           }
-
-           if (!isVoid(object.parent)) {
-             _obj.parent = object.parent + ""
-           }
-
-           if (!isVoid(object.children)) {
-             _obj.children = object.children
-           }
-
-           return _obj
     },
     "Tier2ToTier1": function(obj) {
       return this.Tier0ToTier1(this.Tier2ToTier0(obj))
-    }
+    },
+    
 }

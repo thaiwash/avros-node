@@ -77,15 +77,15 @@ module.exports = {
 
 
   // Multi level inherited collision detection
-  "IsWithinCube2": function(point, cube /* hinge1, hinge2 */) {
+  "IsWithinCube2": function(point, cube /* hinge1, hinge2 */ ) {
     // get all parents
     // construct 1 tier2 solid object
     // get real matrix positions
 
 
-    function ParentTransform(obj){
+    function ParentTransform(obj) {
       var objs = this.AllObjects()
-      for (var i = 0; i < objs.length; i ++) {
+      for (var i = 0; i < objs.length; i++) {
         objs[i].parent == c
       }
     }
@@ -135,14 +135,16 @@ module.exports = {
     var bb = new THREE.Box3(); // for re-use
     bb.setFromObject(cube);
     bb.containsPoint(pointA)
-      //console.log(bb);
-//console.log(, bb.containsPoint(pointB));
+    //console.log(bb);
+    //console.log(, bb.containsPoint(pointB));
 
-    new THREE.BoxGeometry( 1, 1, 1 );
-    var cubeGeometry = new THREE.BoxGeometry( 1, 1, 1 );
-    var cubeMaterial = new THREE.MeshLambertMaterial( { color:
-           0xffff00,wireframe: true } );
-    var cube = new THREE.Mesh( cubeGeometry, cubeMaterial );
+    new THREE.BoxGeometry(1, 1, 1);
+    var cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
+    var cubeMaterial = new THREE.MeshLambertMaterial({
+      color: 0xffff00,
+      wireframe: true
+    });
+    var cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
     cube.position.x = p.x;
     cube.position.y = p.y;
     cube.position.z = p.z;

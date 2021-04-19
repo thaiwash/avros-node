@@ -28,17 +28,17 @@ instance.on("player enter", function(player) {
   console.log("Player " + player + " entered")
   instance.SpawnAsInterest(player, cube)
   instance.GetPlayerSocket(player).emit("head text", {
-    "text": "Move your controller near the cube"
+    "text": "Touch the cube with your controller"
   })
 })
 
 var colored = true
 instance.on("player update", function(player) {
-
   if (isVoid(instance.GetObjectById(cube.id))) {
     console.log("not found")
     return
   }
+/*
   //console.log(instance.GetObjectById(cube.id))
   //console.log(instance.GetObjectById(cube.children[0].id))
   var obj = instance.Tier0ToTier2(instance.GetObjectById(cube.id))
@@ -91,4 +91,5 @@ function Intersection(point, cube) {
   var b = new THREE.Box3()
   b.setFromObject(box)
   return b.intersectsSphere(sphere)
-}
+  */
+})

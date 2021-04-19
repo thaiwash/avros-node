@@ -1,2 +1,2 @@
-var avros = require("../src/main.js")
-console.log(avros);
+require("../src/main.js")
+console.log(AVROS);
