@@ -30,6 +30,6 @@
     "simple-json-db": "^1.2.2",
     "socket.io": "^2.2.0",
     "socket.io-client": "^2.2.0",
-    "three": "^0.125.2"
+    "three": "^0.137.0"
   }
 }
