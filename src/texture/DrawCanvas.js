@@ -7,12 +7,12 @@ module.exports = {
    * @param {Int} textureId - an object id for a plane
    * @param {Object} canvas - this is a canvas object creeted by the node extension called canvas
    */
-  "SetTexture": function(textureId, canvas) {
-    this.io.sockets.emit("set texture", {
-      "object_id": textureId + "",
+  "SetTexture": function(ws, object, canvas) {
+    ws.send("set texture|"+JSON.stringify({
+      "object_id": object.object_id,
       // the header needs to be stripped from this base64 encoded data string
-      "texture": canvas.toDataURL().substr("data:image/png;base64,".length)
-    })
+      "base64": canvas.toDataURL().substr("data:image/png;base64,".length)
+    }))
   },
 
 

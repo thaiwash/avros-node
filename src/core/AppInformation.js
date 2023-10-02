@@ -14,10 +14,6 @@ module.exports = {
    */
   "AppInformation": function(AppName, AppIcon) {
     var self = this
-    if (isVoid(this.io)) {
-      console.log("Serve needs to be called before AppInformation")
-      return
-    }
 
     if (isVoid(AppIcon)) {
       AppIcon = defaultIcon
@@ -25,14 +21,19 @@ module.exports = {
       AppIcon = fs.readFileSync(AppIcon, 'base64')
     }
 
-    this.io.on('connection', function(socket) {
-      socket.on('app info request', function() {
-        console.log("app info request")
-        self.io.sockets.emit("app info callback", {
-          "name": AppName,
-          "icon": AppIcon
-        })
-      })
+    this.wss.on('connection', function(ws) {
+			
+	  ws.on('message', function(message) {
+		  if (message == "app info request") {
+			  console.log("Got app info request")
+			  ws.send("app info callback|"+JSON.stringify({
+				  "name": AppName,
+				  "icon": AppIcon
+				})
+			  )
+		  }
+	  });
+  
     })
   }
 }

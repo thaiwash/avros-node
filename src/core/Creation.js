@@ -37,23 +37,26 @@ module.exports = {
      * @param {String} player - player name
      * @param {Object} params - description object
   */
-  "SpawnAsInterest": function(player, object) {
-    var t1 = new Transform(this.players[player].head.position, this.players[player].head.rotation);
+  "SpawnAsInterest": function(ws, object) {
+    var t1 = new Transform(this.users[ws.connectionID].head.position, this.users[ws.connectionID].head.rotation);
+
+	console.log(this.users[ws.connectionID].head.position)
 
     var vec = t1.transformPosition(new Vector3(0, 0, 0.5))
 
 
     object.position = vec
-    object.rotation = this.players[player].head.rotation
+    object.rotation = this.users[ws.connectionID].head.rotation
 
-    this.DescribeObject(object, player)
+	console.log(object.name)
+    this.DescribeObject(ws, object)
   },
 
-  "SpawnAsInterestThree": function(player, object) {
+  "SpawnAsInterestThree": function(ws, object) {
     //var t1 = new Transform(this.players[player].head.position, this.players[player].head.rotation);
     var head = new THREE.Object3D()
-    head.quaternion = this.players[player].head.rotation
-    head.position = this.players[player].head.position
+    head.quaternion = this.users[ws.connectionID].head.rotation
+    head.position = this.users[ws.connectionID].head.position
 
     var obj = new THREE.Object3D()
     head.add(obj)
@@ -67,9 +70,9 @@ module.exports = {
     //obj.getWorldQuaternion(quat)
 
     object.position = vec
-    object.rotation = this.players[player].head.rotation
+    object.rotation = this.users[ws.connectionID].head.rotation
 
-    this.DescribeObject(object, player)
+    this.DescribeObject(ws, object)
   },
 
   /**
@@ -147,18 +150,18 @@ module.exports = {
    * @param {Object} Object - Object to update
    * @param {String} PlayerName - Updated player's name. Required if instance sharing is disabled
    */
-  "DescribeObject": function(data, player) {
-    if (isVoid(player) && !this.instanceSharing) {
-      this.systemMessage("Player identity required for unsared instances", "ERROR")
-      return
-    }
+  "DescribeObject": function(ws, object) {
+
+	
+    console.log("describe object|"+object.getJSON())
+	ws.send("describe object|"+object.getJSON())
 
 
     // convert to API interpretable form
-    var objArr = this.Construct(data)
+    //var objArr = this.Construct(data)
 
     //console.log(objArr)
-
+/*
     for (var i = 0; i < objArr.length; i++) {
       if (!this.instanceSharing) {
         if (isVoid(this.players[player])) {
@@ -187,8 +190,7 @@ module.exports = {
         this.emit("object changed", objArr[i])
         this.io.sockets.emit("object description", objArr[i])
       }
-    }
-
+    }*/
 
   }
 

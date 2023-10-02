@@ -73,11 +73,11 @@ module.exports = {
    * @param {String} tag - Tag to add
    */
 
-  "AddTag": function(object_id, tag) {
-    this.io.sockets.emit("add tag", {
-      "object_id": object_id + "",
+  "AddTag": function(ws, object, tag) {
+    ws.send("add tag|"+JSON.stringify({
+      "object_id": object.object_id,
       "tag": tag
-    })
+    }))
   },
   /**
    * Remove tag to object

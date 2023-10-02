@@ -16,12 +16,78 @@ class Thing {
   set(obj) {
     for (let [key, value] of Object.entries(obj)) {
       //console.log(`${key}: ${value}`);
-      this[key] = value
+	  if (key == "id") {
+		  this.id = value
+		  this.object_id = value
+	  } else if (key == "eulerRotation") {
+		  this.rotation = Quaternion.Euler(value.x, value.y, value.z)
+	  } else {
+		  this[key] = value
+	  }
     }
   }
-  setValue(key, val) {
-    this[key] = val
+  
+  getJSON() {
+    var _obj = {}
+
+
+    if (!isVoid(this.object_id)) {
+      _obj.object_id = parseInt(this.object_id) 
+    } else if (!isVoid(this.id)) {
+      _obj.object_id = parseInt(this.id)
+    } else {
+      _obj.object_id = this.makeId()
+    }
+	
+	
+    if (isVoid(this.type)) {
+      _obj.type = "empty"
+    } else {
+      if (this.type == 'BoxGeometry') {
+        _obj.type = "cube"
+      } else
+      if (this.type == 'SphereGeometry') {
+        _obj.type = "sphere"
+      } else
+      if (this.type == 'PlaneGeometry') {
+        _obj.type = "plane"
+      } else {
+        _obj.type = this.type
+      }
+
+    }
+	
+    if (isVoid(this.name)) {
+      _obj.name = ""
+    } else {
+      _obj.name = this.name
+    }
+	
+    if (!isVoid(this.position)) {
+		_obj.position = {
+			"x": this.position.x,
+			"y": this.position.y,
+			"z": this.position.z
+		}
+	}
+    if (!isVoid(this.rotation)) {
+		_obj.rotation = {
+			"x": this.rotation.x,
+			"y": this.rotation.y,
+			"z": this.rotation.z,
+			"w": this.rotation.w
+		}
+	}
+    if (!isVoid(this.scale)) {
+		_obj.scale = this.scale
+	}
+    if (!isVoid(this.parent)) {
+		_obj.parent = this.parent
+	}
+	
+	return JSON.stringify(_obj)
   }
+  
   getSocket() {
     var _obj = {}
 
@@ -134,12 +200,12 @@ class Thing {
     return _obj
   }
 
-  //Waiting to be crapped or finished
+  //Waiting to be scrapped or finished
   getUnity() {
 
   }
 
-  //Waiting to be crapped or finished
+  //Waiting to be scrapped or finished
   getTHREE() {
     function ConvertRotation(qx, qy, qz, qw) {
 

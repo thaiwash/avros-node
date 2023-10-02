@@ -26,6 +26,7 @@ global.loadImage = loadImage
 const EventEmitter = require('events');
 global.fs = require('fs');
 
+const { v4: uuidv4 } = require('uuid');
 
 global.isVoid = function isVoid(input) {
   if (typeof input == "undefined") {
@@ -134,27 +135,42 @@ class Serve extends EventEmitter {
     })
 
     this.server = require('http').createServer(this.app);
-    this.io = require('socket.io')(this.server);
-
-    this.server.listen(port);
+    var WebSocket = require('ws');
+	
+	this.wss = new WebSocket.Server({ port: port });
 
     /**
      * Socket Connection.
      *
      * @fires connected
      */
-    this.io.on('connection', function(socket) {
-      self.InitSocket(socket)
+    this.wss.on('connection', function(ws) {
+	  // Generate a unique ID for the connection
+	  ws.connectionID = uuidv4()
+  
+      self.InitSocket(ws)
+	  console.log("init socket")
+      ws.send('HeadText|{"say": "Socket connection initialized."}');
       /**
        * Connected event.
        *
        * @event connected
        * @property {object}  - passes the connected socket
        */
-      self.emit("connected", socket)
+		//ws.send('connected');
+		console.log("client connected");
 
 
-
+		ws.on('message', function(message) {
+			console.log('Received message:' + message.toString());
+			var msg = message.toString().split("|")
+			self.emit(msg[0], msg[1]);
+		});
+		
+		ws.on('close', () => {
+			// Remove the connection from the connections map
+			console.log(`Connection ${ws.connectionID} closed`);
+		  });
     })
 
 
@@ -175,10 +191,6 @@ Object.assign(Serve.prototype, require("./core/SystemMessage"))
 Object.assign(Serve.prototype, require("./database/JSONDatabase"))
 Object.assign(Serve.prototype, require("./texture/DrawCanvas"))
 Object.assign(Serve.prototype, require("./collider/BoxCollider"))
-Object.assign(Serve.prototype, require("./reform/Tier0"))
-Object.assign(Serve.prototype, require("./reform/Tier1"))
-Object.assign(Serve.prototype, require("./reform/Tier2"))
-Object.assign(Serve.prototype, require("./reform/Tier3"))
 require("./thing/Thing")
 
 
