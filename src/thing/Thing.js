@@ -25,6 +25,13 @@ class Thing {
 		  this[key] = value
 	  }
     }
+	if (obj.database) {
+	  if (value) {
+		  if (!isVoid(this.DatabaseConnection)) {
+			  
+		  }
+	  }
+	}
   }
   
   getJSON() {

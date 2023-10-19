@@ -1,20 +1,21 @@
 module.exports = {
 
-
-  "ActivateInstanceIntegrityIntelligence": function() {
-    var self = this
-    this.requiredTasks = []
-    this.rationalizationInterval = setInterval(function() {
-      self.RationalizeObjects()
-    }, 3000)
-  },
-
   /*
 
-  This pure Artificial Intelligence, A function that upkeeps instance integrity,
-  so that humans that connect certainly share the same instance.
+  This module syncronizes instance objects.
+  It's also degined for instance sharing.
 
   */
+
+  "InitializeObjectSyncronization": function() {
+    var self = this
+	
+    /*this.requiredTasks = []
+    this.rationalizationInterval = setInterval(function() {
+      self.RationalizeObjects()
+    }, 3000)*/
+  },
+
 
   "RationalizeObjects": function() {
 

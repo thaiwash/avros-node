@@ -18,7 +18,14 @@ module.exports = {
     if (isVoid(AppIcon)) {
       AppIcon = defaultIcon
     } else {
-      AppIcon = fs.readFileSync(AppIcon, 'base64')
+	  if (fs.existsSync(AppIcon)) {
+		AppIcon = fs.readFileSync(AppIcon, 'base64')
+		  //console.log("App icon is "+AppIcon)
+	  } else {
+		  console.log("App icon not found")
+		  AppIcon = defaultIcon
+	  }
+	  
     }
 
     this.wss.on('connection', function(ws) {

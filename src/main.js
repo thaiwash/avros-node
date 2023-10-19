@@ -3,8 +3,40 @@
  * @author Taivas Gogoljuk
  *
  * @module Main
+ 
+const express = require('express');
+const http = require('http');
+const WebSocket = require('ws');
+
+const app = express();
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
+
+const port = 3000; // The port on which the HTTP and WebSocket servers will listen
+
+// Define a route for "/lobby" using Express
+app.get('/lobby', (req, res) => {
+  res.send('Welcome to the lobby!');
+});
+
+wss.on('connection', (ws) => {
+  console.log('WebSocket connection established.');
+
+  // Handle WebSocket messages
+  ws.on('message', (message) => {
+    console.log(`Received: ${message}`);
+    // You can send messages back to the client here, e.g., ws.send('Hello, client!').
+  });
+
+  // Handle WebSocket closure
+  ws.on('close', () => {
+    console.log('WebSocket connection closed.');
+  });
+});
+ 
  */
 "use strict";
+
 
 global.THREE = require('three');
 global.AVROS = {}
@@ -116,29 +148,66 @@ global.Convert = {
  * @constructor {Number} port - The port number to use.
  */
 
+const express = require('express');
+const http = require('http');
+const WebSocket = require('ws');
+
+const app = express();
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
+
 class Serve extends EventEmitter {
   constructor(port) {
     super()
     var self = this
     
-    this.ActivateInstanceIntegrityIntelligence()
+	this.ConnectingDebug = true
+
     this.players = []
     this.instanceSharing = true
 
+    var WebSocket = require('ws');
     var express = require('express');
     this.app = express()
-    this.app.use(express.static(__dirname + '/public'))
+    //this.app.use(express.static(__dirname + '/public'))
+    var server = require('http').createServer(this.app);
+	this.wss = new WebSocket.Server({ server });
+		
+	server.listen(port, () => {
+	  console.log(`Server is running on http://localhost:${port}`);
+	});
+
+	
+	const connections = new Map();
 
     this.app.get('/players', function(req, res) {
       res.send(JSON.stringify(self.players, 0, 4));
       res.end();
     })
 
-    this.server = require('http').createServer(this.app);
-    var WebSocket = require('ws');
 	
-	this.wss = new WebSocket.Server({ port: port });
 
+	this.listConnections = function() {
+		  if (this.ConnectingDebug) {
+	  console.log('Time: '+Date.now());
+	  console.log('List of open connections:');
+		  }
+	  for (const [connectionId, ws] of connections) {
+		  if (this.ConnectingDebug) {
+		console.log(`Connection ID: ${connectionId}`);
+		console.log(ws.readyState)
+		  }
+		if (ws.readyState == 1) {
+			ws.send("SYNCRONIZATION_REQUEST")
+		}
+	  }
+	}
+	
+	this.interval = setInterval(function() {
+		self.listConnections();
+	}, 1000);
+	
+	this.InitEvents();
     /**
      * Socket Connection.
      *
@@ -147,10 +216,13 @@ class Serve extends EventEmitter {
     this.wss.on('connection', function(ws) {
 	  // Generate a unique ID for the connection
 	  ws.connectionID = uuidv4()
+
+	  // Store the WebSocket connection with its ID
+	  connections.set(ws.connectionID, ws);
   
       self.InitSocket(ws)
-	  console.log("init socket")
-      ws.send('HeadText|{"say": "Socket connection initialized."}');
+	  console.log("Init socket")
+      //ws.send('HeadText|{"say": "Socket connection initialized."}');
       /**
        * Connected event.
        *
@@ -161,16 +233,32 @@ class Serve extends EventEmitter {
 		console.log("client connected");
 
 
+		
+				// Function to close a WebSocket connection by ID
+		function closeConnectionById(connectionId) {
+		  const ws = connections.get(connectionId);
+		  if (ws) {
+			//ws.terminate(); // Terminate the WebSocket 
+			ws.close(1005, 'disconnect'); 
+			console.log("connection closed")
+		  }
+		}
+
+		ws.on('close', function() {
+			// Remove the connection from the connections map
+			console.log(`Connection ${ws.connectionID} closed`);
+			closeConnectionById(ws.connectionId);
+			connections.delete(ws.connectionId);
+			self.listConnections();
+			//clearInterval(self.syncTimer[ws.connectionID])
+			delete(self.syncTimer[ws.connectionID]);
+		});
+			
 		ws.on('message', function(message) {
 			console.log('Received message:' + message.toString());
 			var msg = message.toString().split("|")
-			self.emit(msg[0], msg[1]);
+			self.emit(msg[0], ws, msg[1]);
 		});
-		
-		ws.on('close', () => {
-			// Remove the connection from the connections map
-			console.log(`Connection ${ws.connectionID} closed`);
-		  });
     })
 
 
@@ -189,6 +277,7 @@ Object.assign(Serve.prototype, require("./core/ObjectTransform"))
 Object.assign(Serve.prototype, require("./core/AppInformation"))
 Object.assign(Serve.prototype, require("./core/SystemMessage"))
 Object.assign(Serve.prototype, require("./database/JSONDatabase"))
+Object.assign(Serve.prototype, require("./database/MYSQLDatabase"))
 Object.assign(Serve.prototype, require("./texture/DrawCanvas"))
 Object.assign(Serve.prototype, require("./collider/BoxCollider"))
 require("./thing/Thing")

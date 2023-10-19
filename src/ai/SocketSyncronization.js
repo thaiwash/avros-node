@@ -3,37 +3,46 @@
 
  These functions are not publicly relevant, they define the
  socket connection pipeline.
+ 
+ 
  **/
 
 module.exports = {
+	"InitEvents": function() {
+			
+		this.on("IDENTITY_REQUEST_RESPONSE", function(ws, data) {
+			console.log("IDENTITY_REQUEST_RESPONSE")
+			ws.userName = JSON.parse(data).UserName
+			ws.send("SYNCRONIZATION_REQUEST")
+			this.systemMessage(ws.userName + " sends greetings.")
+			/*
+			self.syncTimer[ws.connectionID] = setInterval(function() {
+				//console.log("tick"+ ws.connectionID)
+				self.ws.send("SYNCRONIZATION_REQUEST")
+			}, 1000)*/
+		})
+		
+		this.on("SYCRONIZATION", function(ws, data) {
+		  if (isVoid(data)) {
+			this.SystemMessage("VOID_OF_SYNC_DATA", "WARNING")
+			//socket.disconnect()
+			return
+		  }
+		  // syncronization is called once for every reconnection;
+		  console.log(ws.connectionID)
+		  this.SyncEvent(ws, JSON.parse(data))
+		  
+		})
+	},
+	
   "InitSocket": function(ws) {
     var self = this
-	this.ws = ws
     this.systemMessage("Connection detected", "MSG")
+	this.syncTimer = []
 	
-    this.ws.send("REQUEST_USER_IDENTITY")
-    this.on("IDENTITY_REQUEST_RESPONSE", function(data) {
-		console.log("IDENTITY_REQUEST_RESPONSE")
-		ws.userName = JSON.parse(data).UserName
-		ws.send("SYNCRONIZATION_REQUEST")
-		self.systemMessage(ws.userName + " sends greetings")
-		
-		self.emit("player update", ws)
-    })
-	
-    this.on("SYCRONIZATION", function(data) {
-      if (isVoid(data)) {
-        self.SystemMessage("VOID_OF_SYNC_DATA", "WARNING")
-        //socket.disconnect()
-        return
-      }
-      self.SyncEvent(self.ws, JSON.parse(data))
-	})
+    ws.send("REQUEST_USER_IDENTITY")
     
-	/*
-	setTimeout(function() {
-		socket.emit("syncronization event callback")
-	}, 100)*/
+	/**/
       /**
        * Called whever player sends updated information
        * Can be used for ping tracking.
@@ -72,8 +81,7 @@ module.exports = {
 
 
   "SyncEvent": function(socket, data) {
-	console.log("SYNCRONIZATION EVENT PROCESSING START")
-	console.log(data)
+	console.log("SYNCRONIZATION EVENT "+Date.now())
     var name = socket.userName
     var self = this
 
@@ -99,7 +107,6 @@ module.exports = {
 	user.ControllerRight = data[1]
 	user.ControllerLeft = data[2]
 	user.Name = data[3]
-	console.log(user)
 	 
 	if (isVoid(this.users)) {
 		this.users = []
@@ -118,20 +125,12 @@ module.exports = {
     }
 
 
-	console.log(user)
-
     this.users[socket.connectionID] = user
 
-    if (firstConnect) {
-      /**
-       * Called whever a new player connects.
-       *
-       * @event player entered
-       * @property {string}  - Player name
-       */
-      self.emit('player enter', socket);
-
-    }
+    self.emit('user update', socket);
+	if (firstConnect) {
+		self.emit("user enter", socket)
+	}
   },
 
 

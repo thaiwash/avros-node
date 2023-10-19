@@ -1,6 +1,7 @@
 module.exports = {
   /**
    * Activates a simple JSON databse
+   This feature would need some refacturing if its necessairy
 
    * @method
    * @param {String} jsonFile - path to a json file to save to
