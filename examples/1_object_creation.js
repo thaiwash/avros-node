@@ -25,8 +25,8 @@ thing.set({
 })
 
 console.log(thing.getSocket())
-instance.on("player enter", function(ws) {
-  console.log("Player " + ws.userName + " entered")
+instance.on("user enter", function(ws) {
+  console.log("User " + ws.userName + " entered")
   
 
   console.log(thing.name)

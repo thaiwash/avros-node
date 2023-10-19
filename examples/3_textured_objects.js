@@ -13,7 +13,7 @@ cube.set({
 	"scale": {
 		"x": 0.1,
 		"y": 0.1,
-		"z": 0.1
+		"z": 0.04
 	}
 })
 
@@ -52,7 +52,7 @@ var ctx = canvas.getContext('2d')
 
 
 
-instance.on("player enter", function(ws) {
+instance.on("user enter", function(ws) {
   console.log("User " + ws.UserName + " entered")
   instance.SpawnAsInterest(ws, cube)
   instance.DescribeObject(ws, plane)
@@ -64,7 +64,7 @@ instance.on("player enter", function(ws) {
   ctx.fillRect(0, 0, 200, 200)
 
   ctx.fillStyle = "#000000"
-  ctx.font = '30px Impact'
+  ctx.font = '20px Impact'
   ctx.fillText('Awesome!', 50, 100)
 
   loadImage('res/icons8-test-tube-48.png').then(function(img) {
