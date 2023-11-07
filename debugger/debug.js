@@ -71,9 +71,9 @@ instance.on("user enter", function(ws) {
   ctx.font = '8px Impact'
   ctx.fillText('Relevant bug:', 20, 70)
   ctx.fillText('Disconnect and reconnect causes a syncronization overload [Bug cleared (took 2 days to fix)]', 20, 100)
-  ctx.fillText('Head text not clearing until disconnected. [This issue is probably caused by websocet asyncronicity issues, its not revelant enough to be fixed]', 20, 120)
-  ctx.fillText('Sometimes after disconnect, connect button jams. (other connections still work)', 20, 140)
-
+  ctx.fillText('Head text not clearing until disconnected. [This issue is probably caused by websocet asyncronicity issues, its not revelant enough to be fixed] (HeadText removed from network apps)', 20, 120)
+  ctx.fillText('Sometimes after disconnect, connect button jams. (other connections still work) If the server crashes, disconnect button jams', 20, 140)
+// texture upside down sometimes HoloPDA
   loadImage('bughunt.png').then(function(img) {
     ctx.drawImage(img, 10, 10, 50, 50)
     instance.SetTexture(ws, plane, canvas)

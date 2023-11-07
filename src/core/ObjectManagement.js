@@ -3,6 +3,102 @@
  **/
 module.exports = {
 
+
+  "TransformObject": function(ws, transform) {
+
+    //console.log("object transform|"+JSON.stringify(transform))
+	ws.send("object transform|"+JSON.stringify(transform))
+  },
+  
+  "EnableMovement": function(ws, bounds) {
+    ws.send("enable movement|"+JSON.stringify(bounds))
+  },
+  
+  "AttachUser": function(ws, object) {
+    ws.send('attach user|{"object_id": '+object.id+'}')
+  },
+  
+  "DeleteObject": function(ws, object) {
+    ws.send('delete object|{"object_id": '+object.id+'}')
+  },
+  
+  "MoveUser": function(ws, position) {
+	  
+	// make an empty game object
+	var userRelocationThing = new AVROS.Thing("relocation")
+	
+	// at users head location
+	userRelocationThing.position = this.users[ws.connectionID].head.position
+	this.DescribeObject(ws, userRelocationThing)
+	
+	// attach user to that object
+	this.AttachUser(ws, userRelocationThing)
+	
+	// move object to a new location
+	userRelocationThing.position = position
+	this.DescribeObject(ws, userRelocationThing)
+	
+	// delete the transport object
+	this.DeleteObject(ws, userRelocationThing)
+	
+	//position.y += 2
+	//this.users[ws.connectionID].head.position = position
+	
+  },
+
+
+  /**
+   * Describe object to unity instance
+   * @method
+   * @param {Object} Object - Object to update
+   * @param {String} PlayerName - Updated player's name. Required if instance sharing is disabled
+   */
+  "DescribeObject": function(ws, object) {
+
+	if (isVoid(object)) {
+		console.log("Invalid object passed to DescribeObject")
+		return
+	}
+    //console.log("describe object|"+object.getJSON())
+	ws.send("describe object|"+object.getJSON())
+
+
+    // convert to API interpretable form
+    //var objArr = this.Construct(data)
+
+    //console.log(objArr)
+/*
+    for (var i = 0; i < objArr.length; i++) {
+      if (!this.instanceSharing) {
+        if (isVoid(this.players[player])) {
+          this.systemMessage("Player list disintegrity " + player, "ERROR")
+          console.log(this.players)
+          return
+        }
+
+
+        var socket = this.GetPlayerSocket(player)
+        if (isVoid(socket)) {
+          this.systemMessage("Player socket disintegrity " + player, "ERROR")
+          return
+        }
+        this.systemMessage(player + ": Spawn object", "NOTICE")
+        this.systemMessage(JSON.stringify(objArr[i]), "NOTICE")
+        this.emit("object changed", objArr[i])
+
+        socket.emit("object description", objArr[i])
+        this.UpdatePlayerObjectLedger(player, objArr[i])
+
+      } else {
+        console.log("sockets emit")
+        // multiplayer
+        // todo: broadcast to all players within a range
+        this.emit("object changed", objArr[i])
+        this.io.sockets.emit("object description", objArr[i])
+      }
+    }*/
+
+  },
   /**
    * Bookkeeping
    * @method

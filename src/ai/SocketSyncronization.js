@@ -29,7 +29,7 @@ module.exports = {
 			return
 		  }
 		  // syncronization is called once for every reconnection;
-		  console.log(ws.connectionID)
+		  //console.log(ws.connectionID)
 		  this.SyncEvent(ws, JSON.parse(data))
 		  
 		})
@@ -77,12 +77,9 @@ module.exports = {
        */
 
   },
-
-
+  
 
   "SyncEvent": function(socket, data) {
-	console.log("SYNCRONIZATION EVENT "+Date.now())
-    var name = socket.userName
     var self = this
 
     var controllerDistraction = 0
@@ -106,7 +103,6 @@ module.exports = {
 	}
 	user.ControllerRight = data[1]
 	user.ControllerLeft = data[2]
-	user.Name = data[3]
 	 
 	if (isVoid(this.users)) {
 		this.users = []
@@ -117,15 +113,22 @@ module.exports = {
 
       user.objects = []
 	  
+		user.SyncCount = 1
 
-      self.systemMessage("" + name + " connected")
       firstConnect = true
     } else {
+		user.SyncCount = this.users[socket.connectionID].SyncCount + 1
       //player.objects = this.players[name].objects
     }
 
-
+	
     this.users[socket.connectionID] = user
+	
+	if (isNaN(this.users[socket.connectionID].SyncCount)) {
+		this.users[socket.connectionID].SyncCount = 1
+	} else {
+		this.users[socket.connectionID].SyncCount += 1
+	}
 
     self.emit('user update', socket);
 	if (firstConnect) {

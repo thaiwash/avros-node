@@ -1,3 +1,8 @@
+/**
+ * @author Taivas Gogoljuk
+ **/
+const { createCanvas, loadImage } = require('canvas');
+
 module.exports = {
   /**
    * Drawing tools.
@@ -13,6 +18,34 @@ module.exports = {
       // the header needs to be stripped from this base64 encoded data string
       "base64": canvas.toDataURL().substr("data:image/png;base64,".length)
     }))
+  },
+  
+  "SetTextureBase64": function(ws, object, base64string) {
+    ws.send("set texture|"+JSON.stringify({
+      "object_id": object.object_id,
+      // the header needs to be stripped from this base64 encoded data string
+      "base64": base64string
+    }))
+  },
+  
+  "SetTextureFromImage": function(ws, thing, texture) {
+	  var self = this
+    loadImage(texture).then(function(img) {
+		// Get the width and height of the loaded image
+		const imageWidth = img.width;
+		const imageHeight = img.height;
+
+		var canvas = createCanvas(img.width, img.height);
+		var ctx = canvas.getContext('2d');
+
+		var ceilingTextureCanvas = createCanvas(img.width, img.height);
+		var ceilingTextureCtx = ceilingTextureCanvas.getContext('2d');
+
+		ceilingTextureCtx.drawImage(img, 0, 0, img.width, img.height);
+	  
+		self.SetTexture(ws, thing, ceilingTextureCanvas)
+
+    });
   },
 
 

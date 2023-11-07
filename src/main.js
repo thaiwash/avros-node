@@ -61,7 +61,10 @@ global.fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 
 global.isVoid = function isVoid(input) {
-  if (typeof input == "undefined") {
+  if (typeof input === "undefined") {
+    return true
+  }
+  if (typeof input == null) {
     return true
   }
   return false
@@ -157,35 +160,49 @@ const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
 
 class Serve extends EventEmitter {
-  constructor(port) {
+  constructor(port, isDT = false) {
     super()
+	this.setMaxListeners(1000);
     var self = this
+	this.logTraffic = false
     
-	this.ConnectingDebug = true
+	this.ConnectingDebug = false
 
     this.players = []
-    this.instanceSharing = true
+    //this.instanceSharing = true
 
     var WebSocket = require('ws');
     var express = require('express');
     this.app = express()
-    //this.app.use(express.static(__dirname + '/public'))
     var server = require('http').createServer(this.app);
 	this.wss = new WebSocket.Server({ server });
 		
 	server.listen(port, () => {
 	  console.log(`Server is running on http://localhost:${port}`);
 	});
+	
+	this.InitDevtool = function(dtport, instance) {
+		//this.devtoolApp = express()
+		//var devtoolServer = require('http').createServer(this.devtoolApp);
+		//this.dtwss = new WebSocket.Server({ devtoolServer });
+		this.dti = new Serve(dtport, true)
+		this.dti.AppInformation("Devtool "+port, "DevTool")
+		this.dti.on("user enter", function(ws) {
+			console.log("Devtool init")
+			this.DevTool(ws, this)
+		})
+
+		
+	}
 
 	
 	const connections = new Map();
 
-    this.app.get('/players', function(req, res) {
+    /*this.app.get('/players', function(req, res) {
       res.send(JSON.stringify(self.players, 0, 4));
       res.end();
-    })
+    })*/
 
-	
 
 	this.listConnections = function() {
 		  if (this.ConnectingDebug) {
@@ -198,6 +215,7 @@ class Serve extends EventEmitter {
 		console.log(ws.readyState)
 		  }
 		if (ws.readyState == 1) {
+			//console.log("Sending "+"SYNCRONIZATION_REQUEST")
 			ws.send("SYNCRONIZATION_REQUEST")
 		}
 	  }
@@ -220,8 +238,9 @@ class Serve extends EventEmitter {
 	  // Store the WebSocket connection with its ID
 	  connections.set(ws.connectionID, ws);
   
-      self.InitSocket(ws)
 	  console.log("Init socket")
+      self.InitSocket(ws)
+	  ws.send("REQUEST_USER_IDENTITY")
       //ws.send('HeadText|{"say": "Socket connection initialized."}');
       /**
        * Connected event.
@@ -255,8 +274,11 @@ class Serve extends EventEmitter {
 		});
 			
 		ws.on('message', function(message) {
-			console.log('Received message:' + message.toString());
 			var msg = message.toString().split("|")
+			if (self.logTraffic) {
+				console.log('Received message:' + message.toString());
+			}
+			
 			self.emit(msg[0], ws, msg[1]);
 		});
     })
@@ -273,13 +295,13 @@ Object.assign(Serve.prototype, require("./ai/SocketSyncronization"))
 Object.assign(Serve.prototype, require("./ai/InstanceRationalization"))
 Object.assign(Serve.prototype, require("./core/ObjectManagement"))
 Object.assign(Serve.prototype, require("./core/Creation"))
-Object.assign(Serve.prototype, require("./core/ObjectTransform"))
 Object.assign(Serve.prototype, require("./core/AppInformation"))
 Object.assign(Serve.prototype, require("./core/SystemMessage"))
 Object.assign(Serve.prototype, require("./database/JSONDatabase"))
 Object.assign(Serve.prototype, require("./database/MYSQLDatabase"))
 Object.assign(Serve.prototype, require("./texture/DrawCanvas"))
 Object.assign(Serve.prototype, require("./collider/BoxCollider"))
+Object.assign(Serve.prototype, require("./devtool/DevTool"))
 require("./thing/Thing")
 
 

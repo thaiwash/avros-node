@@ -8,6 +8,8 @@ var instance = new AVROS.Serve(8080)
    
 instance.AppInformation("Tester", "res/icon64x64.png")
 If no icon is set, default icon is applied.
+
+
    */
    
 instance.AppInformation("Test 1")
@@ -24,11 +26,11 @@ thing.set({
   }
 })
 
-console.log(thing.getSocket())
+
 instance.on("user enter", function(ws) {
   console.log("User " + ws.userName + " entered")
   
-
+  console.log(thing)
   console.log(thing.name)
   instance.SpawnAsInterest(ws, thing)
 })

@@ -1,7 +1,7 @@
 
 {
   "name": "avros",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "AROS 3D WebApp wrapper",
   "main": "src/main.js",
   "scripts": {

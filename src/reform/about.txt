@@ -1,8 +1,0 @@
-/**
-Convert objects between data models
-- Raw data, or the type of data that gets communicated through the socket
-Its always string format JSON object
-- Human readable JSON, it's optimized for manual configuration.
-- Math3d library converted, and can be used for further calculations
-- ThreeJS compatible object
- */

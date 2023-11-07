@@ -10,37 +10,20 @@ module.exports = {
 
 
   /**
-     * Sets object in front of connected players
-
-     * @method
-     * @param {String} player - player name
-     * @param {Object} object - tier1
-  */
-  "BlessingsOfPosition": function(player, object) {
-    var self = instance
-    var t1 = new Transform(self.players[player].head.position, self.players[player].head.rotation);
-
-    var vec = t1.transformPosition(new Vector3(0, 0, 0.5))
-
-
-    object.position = vec
-    object.rotation = self.players[player].head.rotation
-
-    return object
-  },
-
-  /**
      * Spawns object in front of connected players
      (to be depricated)
 
      * @method
-     * @param {String} player - player name
-     * @param {Object} params - description object
+     * @param {WebSocket} ws - Web socket
+     * @param {Thing} obj - object as a Thing
   */
   "SpawnAsInterest": function(ws, object) {
+	if(isVoid(object)) {
+		console.log("Invalid object given to SpawnAsInterest")
+		return
+	}
     var t1 = new Transform(this.users[ws.connectionID].head.position, this.users[ws.connectionID].head.rotation);
 
-	console.log(this.users[ws.connectionID].head.position)
 
     var vec = t1.transformPosition(new Vector3(0, 0, 0.5))
 
@@ -101,6 +84,8 @@ module.exports = {
 
   /**
    * Constructs an object so that it can be sent to the uninty server
+   
+   This is a complex function I made to make parenting recursives
 
    * @method
    * @param {Object} Object - Object to update
@@ -141,58 +126,8 @@ module.exports = {
       global.collection = []
     }
     global.collection.push(obj)
-  },
-
-
-  /**
-   * Describe object to unity instance
-   * @method
-   * @param {Object} Object - Object to update
-   * @param {String} PlayerName - Updated player's name. Required if instance sharing is disabled
-   */
-  "DescribeObject": function(ws, object) {
-
-	
-    console.log("describe object|"+object.getJSON())
-	ws.send("describe object|"+object.getJSON())
-
-
-    // convert to API interpretable form
-    //var objArr = this.Construct(data)
-
-    //console.log(objArr)
-/*
-    for (var i = 0; i < objArr.length; i++) {
-      if (!this.instanceSharing) {
-        if (isVoid(this.players[player])) {
-          this.systemMessage("Player list disintegrity " + player, "ERROR")
-          console.log(this.players)
-          return
-        }
-
-
-        var socket = this.GetPlayerSocket(player)
-        if (isVoid(socket)) {
-          this.systemMessage("Player socket disintegrity " + player, "ERROR")
-          return
-        }
-        this.systemMessage(player + ": Spawn object", "NOTICE")
-        this.systemMessage(JSON.stringify(objArr[i]), "NOTICE")
-        this.emit("object changed", objArr[i])
-
-        socket.emit("object description", objArr[i])
-        this.UpdatePlayerObjectLedger(player, objArr[i])
-
-      } else {
-        console.log("sockets emit")
-        // multiplayer
-        // todo: broadcast to all players within a range
-        this.emit("object changed", objArr[i])
-        this.io.sockets.emit("object description", objArr[i])
-      }
-    }*/
-
   }
+
 
 
 }

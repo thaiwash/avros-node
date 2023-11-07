@@ -2,7 +2,11 @@
 class Thing {
   constructor(name) {
     this.name = name
-
+	this.id = this.makeId()
+	this.object_id = this.id
+	this.position = { x: 0, y: 0, z: 0 }
+	this.scale = { x: 1, y: 1, z: 1 }
+	this.rotation = { x: 0, y: 0, z: 0, w: 1 }
   }
 
   makeId() {
@@ -20,7 +24,7 @@ class Thing {
 		  this.id = value
 		  this.object_id = value
 	  } else if (key == "eulerRotation") {
-		  this.rotation = Quaternion.Euler(value.x, value.y, value.z)
+		  this.rotation = Quaternion.Euler(parseFloat(value.x), parseFloat(value.y), parseFloat(value.z))
 	  } else {
 		  this[key] = value
 	  }
@@ -93,6 +97,14 @@ class Thing {
 	}
 	
 	return JSON.stringify(_obj)
+  }
+  
+  getTransform() {
+	  var json = JSON.parse(this.getJSON())
+	  json.time = 1000;
+	  //json.start_time = Date.now().getTime()
+	  json.start_time = 0;
+	  return json;
   }
   
   getSocket() {
