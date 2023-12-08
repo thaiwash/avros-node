@@ -1,5 +1,5 @@
 require("../src/main.js")
-var instance = new AVROS.Serve(8080)
+var instance = new AVROS.Serve(8888)
 instance.AppInformation("Transform")
 
 var thing = new AVROS.Thing("Tranforming cube")
@@ -16,7 +16,7 @@ thing.set({
 
 
 instance.on("user enter", function(ws) {
-  console.log("User" + ws.UserName + " entered")
+  console.log("User entered")
 
   instance.SpawnAsInterest(ws, thing)
   var transform = thing.getTransform()

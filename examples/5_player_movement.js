@@ -1,6 +1,6 @@
 require("avros")
-var instance = new AVROS.Serve(8080)
-instance.AppInformation("Library", "icon.png")
+var instance = new AVROS.Serve(8888)
+instance.AppInformation("Movement")
 
 var floor = new AVROS.Thing("floor")
 
@@ -114,7 +114,7 @@ var ceilingTextureCtx = ceilingTextureCanvas.getContext('2d')
 instance.on("user enter", function(ws) {
 	
 	
-  console.log("User" + ws.UserName + " entered")
+  console.log("User entered")
   instance.DescribeObject(ws, floor)
   instance.DescribeObject(ws, ceiling)
   instance.DescribeObject(ws, walls[0])

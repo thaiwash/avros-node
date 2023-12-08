@@ -59,7 +59,7 @@ module.exports = {
 		console.log("Invalid object passed to DescribeObject")
 		return
 	}
-    //console.log("describe object|"+object.getJSON())
+	
 	ws.send("describe object|"+object.getJSON())
 
 

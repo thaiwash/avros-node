@@ -1,5 +1,5 @@
 require("../src/main.js")
-var instance = new AVROS.Serve(8080)
+var instance = new AVROS.Serve(8888)
 
   /**
    * Application name and icon for avros menu
@@ -28,7 +28,7 @@ thing.set({
 
 
 instance.on("user enter", function(ws) {
-  console.log("User " + ws.userName + " entered")
+  console.log("User entered")
   
   console.log(thing)
   console.log(thing.name)

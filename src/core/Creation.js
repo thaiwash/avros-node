@@ -31,7 +31,6 @@ module.exports = {
     object.position = vec
     object.rotation = this.users[ws.connectionID].head.rotation
 
-	console.log(object.name)
     this.DescribeObject(ws, object)
   },
 

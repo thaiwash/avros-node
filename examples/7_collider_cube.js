@@ -1,3 +1,8 @@
+/*
+This feature is depricated, since it requires controller tracking (witch can be a security issue)
+*/
+
+
 require("../src/main.js")
 var instance = new AVROS.Serve(80)
 instance.AppInformation("Tester")

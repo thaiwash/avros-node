@@ -1,14 +1,10 @@
 require("../src/main.js")
-var instance = new AVROS.Serve(8080)
+var instance = new AVROS.Serve(8888)
 instance.AppInformation("Test 3")
-
-var cubeId = instance.GenerateId()
-var planeId = instance.GenerateId()
 
 var cube = new AVROS.Thing("Cube")
 
 cube.set({
-	"id": cubeId,
 	"type": "cube",
 	"scale": {
 		"x": 0.1,
@@ -20,9 +16,8 @@ cube.set({
 var plane = new AVROS.Thing("Plane")
 
 plane.set({
-	"id": planeId,
 	"type": "plane",
-	"parent": cubeId,
+	"parent": cube.id,
 	"scale": {
 		"x": 0.1,
 		"y": 0.1,
@@ -53,7 +48,7 @@ var ctx = canvas.getContext('2d')
 
 
 instance.on("user enter", function(ws) {
-  console.log("User " + ws.UserName + " entered")
+  console.log("User entered")
   instance.SpawnAsInterest(ws, cube)
   instance.DescribeObject(ws, plane)
 

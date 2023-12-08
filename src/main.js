@@ -1,39 +1,7 @@
-// https://stackoverflow.com/questions/38124639/how-do-i-split-a-class-definition-across-multiple-files-in-node-js
 /**
  * @author Taivas Gogoljuk
  *
  * @module Main
- 
-const express = require('express');
-const http = require('http');
-const WebSocket = require('ws');
-
-const app = express();
-const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
-
-const port = 3000; // The port on which the HTTP and WebSocket servers will listen
-
-// Define a route for "/lobby" using Express
-app.get('/lobby', (req, res) => {
-  res.send('Welcome to the lobby!');
-});
-
-wss.on('connection', (ws) => {
-  console.log('WebSocket connection established.');
-
-  // Handle WebSocket messages
-  ws.on('message', (message) => {
-    console.log(`Received: ${message}`);
-    // You can send messages back to the client here, e.g., ws.send('Hello, client!').
-  });
-
-  // Handle WebSocket closure
-  ws.on('close', () => {
-    console.log('WebSocket connection closed.');
-  });
-});
- 
  */
 "use strict";
 
@@ -41,15 +9,14 @@ wss.on('connection', (ws) => {
 global.THREE = require('three');
 global.AVROS = {}
 
-//Object.assign(AVROS.prototype, require("./core/CreateObject"))
 var math3d = require("math3d")
 global.Vector3 = math3d.Vector3;
 global.Quaternion = math3d.Quaternion;
 global.Transform = math3d.Transform;
 
 const {
-  createCanvas,
-  loadImage
+    createCanvas,
+    loadImage
 } = require('canvas')
 
 global.createCanvas = createCanvas
@@ -58,91 +25,20 @@ global.loadImage = loadImage
 const EventEmitter = require('events');
 global.fs = require('fs');
 
-const { v4: uuidv4 } = require('uuid');
+const {
+    v4: uuidv4
+} = require('uuid');
 
 global.isVoid = function isVoid(input) {
-  if (typeof input === "undefined") {
-    return true
-  }
-  if (typeof input == null) {
-    return true
-  }
-  return false
+    if (typeof input === "undefined") {
+        return true
+    }
+    if (typeof input == null) {
+        return true
+    }
+    return false
 }
 
-
-global.Convert = {
-  ThreeToAvros: {
-    position: function(avrosJson, threeVector3) {
-      avrosJson.posX = threeVector3.x + ""
-      avrosJson.posY = threeVector3.y + ""
-      avrosJson.posZ = threeVector3.z + ""
-
-      return avrosJson
-    },
-
-    rotation: function(avrosJson, threeVector3) {
-
-      threeVector3.z *= -1; // flip Z
-
-      threeVector3.y -= (Math.PI); // Y is 180 degrees off
-
-      var quat = new THREE.Quaternion();
-      quat.setFromEuler(threeVector3);
-
-
-      avrosJson.rotX = (-quat._x) + ""
-      avrosJson.rotY = quat._y + ""
-      avrosJson.rotZ = quat._z + ""
-      avrosJson.rotW = (-quat._w) + ""
-      return avrosJson
-    },
-
-    scale: function(avrosJson, threeVector3) {
-      avrosJson.scaleX = threeVector3.x + ""
-      avrosJson.scaleY = threeVector3.y + ""
-      avrosJson.scaleZ = threeVector3.z + ""
-
-      return avrosJson
-    }
-  },
-  AvrosToThree: {
-
-    position: function(avrosJson) {
-      return new THREE.Vector3(
-        parseFloat(avrosJson.posX),
-        parseFloat(avrosJson.posY),
-        parseFloat(avrosJson.posZ))
-    },
-
-    rotation: function(avrosJson) {
-
-      var qx = parseFloat(avrosJson.rotX)
-      var qy = parseFloat(avrosJson.rotY)
-      var qz = parseFloat(avrosJson.rotZ)
-      var qw = parseFloat(avrosJson.rotW)
-
-      var q = new THREE.Quaternion(-qx, qy, qz, -qw)
-      var v = new THREE.Euler()
-      v.setFromQuaternion(q)
-
-      v.y += (Math.PI) // Y is 180 degrees off
-
-
-      v.z *= -1 // flip Z
-
-      //this.camera.rotation.copy(v)
-      return v
-    },
-
-    scale: function(avrosJson) {
-      return new THREE.Vector3(
-        parseFloat(avrosJson.scaleX),
-        parseFloat(avrosJson.scaleY),
-        parseFloat(avrosJson.scaleZ))
-    }
-  }
-}
 
 
 /**
@@ -155,137 +51,152 @@ const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
 
-const app = express();
-const server = http.createServer(app);
-const wss = new WebSocket.Server({ server });
 
 class Serve extends EventEmitter {
-  constructor(port, isDT = false) {
-    super()
-	this.setMaxListeners(1000);
-    var self = this
-	this.logTraffic = false
-    
-	this.ConnectingDebug = false
-
-    this.players = []
-    //this.instanceSharing = true
-
-    var WebSocket = require('ws');
-    var express = require('express');
-    this.app = express()
-    var server = require('http').createServer(this.app);
-	this.wss = new WebSocket.Server({ server });
+    constructor(port) {
+        super()
+        var self = this
+        //this.setMaxListeners(1000);
+				
+		this.app = express()
+		this.server = http.createServer(this.app)
 		
-	server.listen(port, () => {
-	  console.log(`Server is running on http://localhost:${port}`);
-	});
-	
-	this.InitDevtool = function(dtport, instance) {
-		//this.devtoolApp = express()
-		//var devtoolServer = require('http').createServer(this.devtoolApp);
-		//this.dtwss = new WebSocket.Server({ devtoolServer });
-		this.dti = new Serve(dtport, true)
-		this.dti.AppInformation("Devtool "+port, "DevTool")
-		this.dti.on("user enter", function(ws) {
-			console.log("Devtool init")
-			this.DevTool(ws, this)
+		this.wss = new WebSocket.Server({
+			server: this.server
 		})
-
 		
-	}
-
-	
-	const connections = new Map();
-
-    /*this.app.get('/players', function(req, res) {
-      res.send(JSON.stringify(self.players, 0, 4));
-      res.end();
-    })*/
-
-
-	this.listConnections = function() {
-		  if (this.ConnectingDebug) {
-	  console.log('Time: '+Date.now());
-	  console.log('List of open connections:');
-		  }
-	  for (const [connectionId, ws] of connections) {
-		  if (this.ConnectingDebug) {
-		console.log(`Connection ID: ${connectionId}`);
-		console.log(ws.readyState)
-		  }
-		if (ws.readyState == 1) {
-			//console.log("Sending "+"SYNCRONIZATION_REQUEST")
-			ws.send("SYNCRONIZATION_REQUEST")
-		}
-	  }
-	}
-	
-	this.interval = setInterval(function() {
-		self.listConnections();
-	}, 1000);
-	
-	this.InitEvents();
-    /**
-     * Socket Connection.
-     *
-     * @fires connected
-     */
-    this.wss.on('connection', function(ws) {
-	  // Generate a unique ID for the connection
-	  ws.connectionID = uuidv4()
-
-	  // Store the WebSocket connection with its ID
-	  connections.set(ws.connectionID, ws);
-  
-	  console.log("Init socket")
-      self.InitSocket(ws)
-	  ws.send("REQUEST_USER_IDENTITY")
-      //ws.send('HeadText|{"say": "Socket connection initialized."}');
-      /**
-       * Connected event.
-       *
-       * @event connected
-       * @property {object}  - passes the connected socket
-       */
-		//ws.send('connected');
-		console.log("client connected");
-
-
 		
-				// Function to close a WebSocket connection by ID
-		function closeConnectionById(connectionId) {
-		  const ws = connections.get(connectionId);
-		  if (ws) {
-			//ws.terminate(); // Terminate the WebSocket 
-			ws.close(1005, 'disconnect'); 
-			console.log("connection closed")
-		  }
-		}
+		
 
-		ws.on('close', function() {
-			// Remove the connection from the connections map
-			console.log(`Connection ${ws.connectionID} closed`);
-			closeConnectionById(ws.connectionId);
-			connections.delete(ws.connectionId);
-			self.listConnections();
-			//clearInterval(self.syncTimer[ws.connectionID])
-			delete(self.syncTimer[ws.connectionID]);
-		});
+        this.logTraffic = true
+        this.ConnectionsDebug = false
+
+        this.server.listen(port, () => {
+            console.log(`Server is running on http://localhost:${port}`);
+        });
+
+        this.InitDevtool = function(dtport, instance) {
+            //this.devtoolApp = express()
+            //var devtoolServer = require('http').createServer(this.devtoolApp);
+            //this.dtwss = new WebSocket.Server({ devtoolServer });
+            this.dti = new Serve(dtport)
+            this.dti.AppInformation("Devtool " + port, "DevTool")
+            this.dti.on("user enter", function(ws) {
+                console.log("Devtool init")
+                this.DevTool(ws, this)
+            })
+
+
+        }
+
+
+        this.connections = [];
+
+
+
+        this.listConnections = function() {
+            if (this.ConnectionsDebug) {
+                console.log('Time: ' + Date.now());
+                console.log('There are '+this.connections.length+' open connections:');
+            }
 			
-		ws.on('message', function(message) {
-			var msg = message.toString().split("|")
-			if (self.logTraffic) {
-				console.log('Received message:' + message.toString());
+						
+			for (var i = 0; i < this.connections.length; i ++) {
+				if (this.ConnectionsDebug) {
+					console.log(this.connections[i].connectionID);
+					console.log("Ready state: " + this.connections[i].ws.readyState);
+				}
+				
+				if (this.connections[i].ws.readyState == 1) {
+                    this.connections[i].ws.send("SYNCRONIZATION_REQUEST")
+				}
 			}
-			
-			self.emit(msg[0], ws, msg[1]);
-		});
-    })
+			/*
+			for (var i = 0; i < this.connections.length; i ++) {
+                if (this.ConnectingDebug) {
+                    console.log(`Connection ID: `+this.connections[i].connectionID);
+                    console.log(ws.readyState)
+                }
+			}
+            for (const [connectionId, ws] of connections) {
+                if (ws.readyState == 1) {
+                    //console.log("Sending "+"SYNCRONIZATION_REQUEST")
+                }
+            }*/
+        }
+
+        this.interval = setInterval(function() {
+            self.listConnections();
+        }, 1000);
+
+        /**
+         * Socket Connection.
+         *
+         * @fires connected
+         */
+        this.wss.on('connection', function(ws) {
+            // Generate a unique ID for the connection
+            ws.connectionID = uuidv4()
+
+            // Store the WebSocket connection with its ID
+            self.connections.push({
+				"connectionID": ws.connectionID,
+				"ws": ws
+			})
+
+            console.log("Init socket")
+            self.InitSocket(ws)
+            //ws.send('HeadText|{"say": "Socket connection initialized."}');
+            /**
+             * Connected event.
+             *
+             * @event connected
+             * @property {object}  - passes the connected socket
+             */
+            //ws.send('connected');
+            console.log("client connected")
 
 
-    console.log("AVROS sub application with address localhost:" + port)
-  }
+
+            // Function to close a WebSocket connection by ID
+            function closeConnectionById(connectionID) {
+				
+				for (var i = 0; i < self.connections.length; i ++) {
+					if (self.connections[i].connectionID == connectionID) {
+						self.connections[i].ws.terminate(); // Terminate the WebSocket 
+						self.connections[i].ws.close(1005, 'disconnect');
+						self.connections.splice(i, 1)
+						return
+					}
+				}
+				
+            }
+
+            ws.on('close', function() {
+                // Remove the connection from the connections map
+                console.log(`Connection ${ws.connectionID} closed\n\n`);
+				
+                closeConnectionById(ws.connectionID);
+				
+				
+                self.listConnections();
+                //clearInterval(self.syncTimer[ws.connectionID])
+                //delete(self.syncTimer[ws.connectionID]);
+            });
+
+            ws.on('message', function(message) {
+                var msg = message.toString().split("|")
+                if (self.logTraffic) {
+                    console.log('Received message:' + message.toString());
+                }
+
+                ws.emit(msg[0], ws, msg[1]);
+            });
+        })
+
+
+        console.log("AVROS application with address localhost:" + port)
+    }
 
 
 }
@@ -303,8 +214,6 @@ Object.assign(Serve.prototype, require("./texture/DrawCanvas"))
 Object.assign(Serve.prototype, require("./collider/BoxCollider"))
 Object.assign(Serve.prototype, require("./devtool/DevTool"))
 require("./thing/Thing")
-
-
 
 
 

@@ -12,12 +12,48 @@ module.exports = {
    * @param {Int} textureId - an object id for a plane
    * @param {Object} canvas - this is a canvas object creeted by the node extension called canvas
    */
-  "SetTexture": function(ws, object, canvas) {
-    ws.send("set texture|"+JSON.stringify({
-      "object_id": object.object_id,
-      // the header needs to be stripped from this base64 encoded data string
-      "base64": canvas.toDataURL().substr("data:image/png;base64,".length)
-    }))
+   
+   "CachedImages": [],
+   
+  "SetTexture": function(ws, object, canvas, fileName) {
+	  //console.log("set texture "+fileName)
+	  if (isVoid(fileName)) {
+		ws.send("set texture|"+JSON.stringify({
+		  "object_id": object.object_id,
+		  // the header needs to be stripped from this base64 encoded data string
+		  "base64": canvas.toDataURL().substr("data:image/png;base64,".length)
+		}))
+	  } else {
+		  if (isVoid(this.CachedImages[ws.connectionID])) {
+			  this.CachedImages[ws.connectionID] = []
+		  }
+		  
+		  
+		  var found = false
+		  //console.log(this.CachedImages[ws.connectionID].length)
+		  for (var i = 0; i < this.CachedImages[ws.connectionID].length; i ++) {
+				if (this.CachedImages[ws.connectionID][i].fileName == fileName) {
+					ws.send("set texture|"+JSON.stringify({
+					  "object_id": object.object_id,
+					  "file_name": fileName,
+					  "base64":""
+					}))
+					//console.log("texture cached")
+					found = true
+				}
+		  }
+		  if (!found) {
+			  ws.send("set texture|"+JSON.stringify({
+				  "object_id": object.object_id,
+				  "file_name": fileName,
+				  "base64": canvas.toDataURL().substr("data:image/png;base64,".length)
+			  }))
+			  
+			  this.CachedImages[ws.connectionID].push({"fileName":fileName})
+				//console.log("texture is now cached")
+		  }
+	  }
+	  
   },
   
   "SetTextureBase64": function(ws, object, base64string) {
@@ -38,12 +74,12 @@ module.exports = {
 		var canvas = createCanvas(img.width, img.height);
 		var ctx = canvas.getContext('2d');
 
-		var ceilingTextureCanvas = createCanvas(img.width, img.height);
-		var ceilingTextureCtx = ceilingTextureCanvas.getContext('2d');
+		var textureCanvas = createCanvas(img.width, img.height);
+		var  textureCtx = textureCanvas.getContext('2d');
 
-		ceilingTextureCtx.drawImage(img, 0, 0, img.width, img.height);
+		textureCtx.drawImage(img, 0, 0, img.width, img.height);
 	  
-		self.SetTexture(ws, thing, ceilingTextureCanvas)
+		self.SetTexture(ws, thing, textureCanvas, texture)
 
     });
   },
